@@ -1,0 +1,67 @@
+﻿<Window x:Class="SGG.Formularios.Login.VentanaSeleccionRol"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SGG - Acceso" Height="500" Width="800"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#0D0D0D">
+
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+        <TextBlock Text="SGG" FontSize="36" FontWeight="Bold" 
+                   Foreground="White" HorizontalAlignment="Center"/>
+        <TextBlock Text="SISTEMA DE GESTIÓN DE GIMNASIO — ACCESO" 
+                   FontSize="11" Foreground="#888888" 
+                   HorizontalAlignment="Center" Margin="0,5,0,30"/>
+
+        <TextBlock Text="Selecciona tu rol para continuar" 
+                   FontSize="14" Foreground="#AAAAAA" 
+                   HorizontalAlignment="Center" Margin="0,0,0,25"/>
+
+        <StackPanel Orientation="Horizontal">
+
+            <!-- Tarjeta Administrador -->
+            <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" 
+                    CornerRadius="6" Width="220" Height="180" Margin="10" 
+                    Cursor="Hand" MouseLeftButtonUp="Rol_Administrador_Click">
+                <StackPanel VerticalAlignment="Center" Margin="20">
+                    <Ellipse Width="20" Height="20" Stroke="#C5FF00" StrokeThickness="2" 
+                             HorizontalAlignment="Left" Margin="0,0,0,15"/>
+                    <TextBlock Text="ADMINISTRADOR" FontSize="16" FontWeight="Bold" 
+                               Foreground="White"/>
+                    <TextBlock Text="Acceso total al sistema" FontSize="12" 
+                               Foreground="#888888" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Tarjeta Recepcionista -->
+            <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" 
+                    CornerRadius="6" Width="220" Height="180" Margin="10" 
+                    Cursor="Hand" MouseLeftButtonUp="Rol_Recepcionista_Click">
+                <StackPanel VerticalAlignment="Center" Margin="20">
+                    <Ellipse Width="20" Height="20" Stroke="#3B82F6" StrokeThickness="2" 
+                             HorizontalAlignment="Left" Margin="0,0,0,15"/>
+                    <TextBlock Text="RECEPCIONISTA" FontSize="16" FontWeight="Bold" 
+                               Foreground="White"/>
+                    <TextBlock Text="Check-in, socios y pagos" FontSize="12" 
+                               Foreground="#888888" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Tarjeta Entrenador -->
+            <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" 
+                    CornerRadius="6" Width="220" Height="180" Margin="10" 
+                    Cursor="Hand" MouseLeftButtonUp="Rol_Entrenador_Click">
+                <StackPanel VerticalAlignment="Center" Margin="20">
+                    <Ellipse Width="20" Height="20" Stroke="#A855F7" StrokeThickness="2" 
+                             HorizontalAlignment="Left" Margin="0,0,0,15"/>
+                    <TextBlock Text="ENTRENADOR" FontSize="16" FontWeight="Bold" 
+                               Foreground="White"/>
+                    <TextBlock Text="Rutinas y asistencia" FontSize="12" 
+                               Foreground="#888888" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </StackPanel>
+</Window>

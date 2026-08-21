@@ -13,4 +13,9 @@
     <ProjectReference Include="..\SGG.Logica\SGG.Logica.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Formularios\Entrenador\" />
+    <Folder Include="Formularios\Recepcionista\" />
+  </ItemGroup>
+
 </Project>
