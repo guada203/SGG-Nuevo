@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SGG.Datos/SGG.Datos.csproj" />
+  <Project Path="SGG.Dominio/SGG.Dominio.csproj" />
+  <Project Path="SGG.Logica/SGG.Logica.csproj" />
+  <Project Path="SGG/SGG.csproj" />
+</Solution>
