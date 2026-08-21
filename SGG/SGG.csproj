@@ -9,13 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Formularios\Login\" />
-    <Folder Include="Formularios\Admin\" />
-    <Folder Include="Formularios\Entrenador\" />
-    <Folder Include="Formularios\Recepcionista\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\SGG.Datos\SGG.Datos.csproj" />
     <ProjectReference Include="..\SGG.Logica\SGG.Logica.csproj" />
   </ItemGroup>
