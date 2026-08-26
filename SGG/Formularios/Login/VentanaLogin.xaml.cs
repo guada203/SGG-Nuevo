@@ -53,6 +53,25 @@ namespace SGG.Formularios.Login
                 return;
             }
 
+            // ⚠️ TEMPORAL - SACAR ESTO CUANDO CONECTEMOS LA BASE DE DATOS DE VERDAD (Etapa 2)
+            // var resultado = _servicioAuth.ValidarCredenciales(email, password, _rolSeleccionado);
+            // if (!resultado.Exitoso)
+            // {
+            //     MostrarError(resultado.Mensaje);
+            //     return;
+            // }
+
+            if (_rolSeleccionado == "Administrador")
+            {
+                var ventanaAdmin = new SGG.Formularios.Admin.VentanaPrincipalAdmin();
+                ventanaAdmin.Show();
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show($"Login simulado OK - Rol: {_rolSeleccionado}");
+            }
+
             // TODO: acá va la validación real contra SGG.Logica / SGG.Datos (RF-21)
             MessageBox.Show($"Validaciones OK - Login simulado\nRol: {_rolSeleccionado}\nEmail: {email}");
         }
