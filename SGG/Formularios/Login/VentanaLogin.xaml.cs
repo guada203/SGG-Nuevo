@@ -22,10 +22,8 @@ namespace SGG.Formularios.Login
             string email = txtEmail.Text.Trim();
             string password = txtPassword.Password;
 
-            // Limpiar error previo
             OcultarError();
 
-            // Validación 1: campos vacíos
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 MostrarError("Debe completar email y contraseña.");
@@ -46,7 +44,6 @@ namespace SGG.Formularios.Login
                 return;
             }
 
-            // Validación real contra la base de datos (RF-21, RF-22)
             var resultado = _servicioAuth.ValidarCredenciales(email, password, _rolSeleccionado);
 
             if (!resultado.Exitoso)
@@ -55,7 +52,6 @@ namespace SGG.Formularios.Login
                 return;
             }
 
-            // Login exitoso: navegar según el rol
             if (_rolSeleccionado == "Administrador")
             {
                 var ventanaAdmin = new VentanaPrincipalAdmin();
