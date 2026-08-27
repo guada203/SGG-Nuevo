@@ -30,14 +30,12 @@ namespace SGG.Formularios.Login
                 return;
             }
 
-            // Validación 2: formato de email válido
             if (!EsEmailValido(email))
             {
                 MostrarError("El formato del email no es válido.");
                 return;
             }
 
-            // Validación 3: longitud mínima de contraseña
             if (password.Length < 4)
             {
                 MostrarError("La contraseña debe tener al menos 4 caracteres.");
