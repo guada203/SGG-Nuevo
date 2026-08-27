@@ -17,5 +17,11 @@ namespace SGG.Dominio.Entidades
 
         // Relación con Membresía (RF-06)
         public int MembresiaId { get; set; }
+        public Membresia? Membresia { get; set; }
+
+        // Relaciones inversas (un socio tiene varios pagos, asistencias, rutinas)
+        public List<Pago> Pagos { get; set; } = new();
+        public List<Asistencia> Asistencias { get; set; } = new();
+        public List<Rutina> Rutinas { get; set; } = new();
     }
 }

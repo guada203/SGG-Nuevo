@@ -8,6 +8,8 @@ namespace SGG.Dominio.Entidades
     {
         public int Id { get; set; }
         public int SocioId { get; set; }
+        public Socio? Socio { get; set; }
+
         public DateTime FechaHoraIngreso { get; set; }
     }
 }

@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using SGG.Logica.Servicios;
+using SGG.Formularios.Admin;
 
 namespace SGG.Formularios.Login
 {
     public partial class VentanaLogin : Window
     {
         private readonly string _rolSeleccionado;
+        private readonly ServicioAutenticacion _servicioAuth = new();
 
         public VentanaLogin(string rolSeleccionado)
         {
@@ -53,8 +46,26 @@ namespace SGG.Formularios.Login
                 return;
             }
 
-            // TODO: acá va la validación real contra SGG.Logica / SGG.Datos (RF-21)
-            MessageBox.Show($"Validaciones OK - Login simulado\nRol: {_rolSeleccionado}\nEmail: {email}");
+            // Validación real contra la base de datos (RF-21, RF-22)
+            var resultado = _servicioAuth.ValidarCredenciales(email, password, _rolSeleccionado);
+
+            if (!resultado.Exitoso)
+            {
+                MostrarError(resultado.Mensaje);
+                return;
+            }
+
+            // Login exitoso: navegar según el rol
+            if (_rolSeleccionado == "Administrador")
+            {
+                var ventanaAdmin = new VentanaPrincipalAdmin();
+                ventanaAdmin.Show();
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show($"¡Bienvenido {resultado.Usuario!.Nombre}! (Rol: {_rolSeleccionado})");
+            }
         }
 
         private bool EsEmailValido(string email)
