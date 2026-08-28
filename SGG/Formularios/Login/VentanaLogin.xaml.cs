@@ -1,7 +1,8 @@
-﻿using System.Text.RegularExpressions;
-using System.Windows;
+﻿using SGG.Formularios.Admin;
 using SGG.Logica.Servicios;
-using SGG.Formularios.Admin;
+using System.Runtime.Intrinsics.X86;
+using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace SGG.Formularios.Login
 {
@@ -54,6 +55,12 @@ namespace SGG.Formularios.Login
             {
                 var ventanaAdmin = new VentanaPrincipalAdmin();
                 ventanaAdmin.Show();
+                this.Close();
+            }
+            else if (_rolSeleccionado == "Recepcionista")
+            {
+                var ventanaRecepcionista = new SGG.Formularios.Recepcionista.VentanaPrincipalRecepcionista();
+                ventanaRecepcionista.Show();
                 this.Close();
             }
             else
