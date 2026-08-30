@@ -34,12 +34,16 @@ namespace SGG.Formularios.Recepcionista
 
         private void btnPagos_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Acá vamos a abrir Registrar Pago (lo armamos más adelante).");
+            var registrarPago = new RegistrarPago();
+            registrarPago.Show();
+            this.Close();
         }
 
         private void btnAsistencia_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Acá vamos a abrir Control de Asistencia (lo armamos más adelante).");
+            var controlAsistencia = new ControlAsistencia();
+            controlAsistencia.Show();
+            this.Close();
         }
 
         private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
