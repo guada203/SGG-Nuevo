@@ -1,0 +1,140 @@
+﻿<Window x:Class="SGG.Formularios.Entrenador.VentanaGestionRutinas"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SGG - Crear Rutina" Height="680" Width="920"
+        WindowStartupLocation="CenterOwner"
+        Background="#0D0D0D">
+
+	<Grid Margin="30">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<!-- Encabezado superior -->
+		<DockPanel Grid.Row="0" Margin="0,0,0,20">
+			<StackPanel DockPanel.Dock="Left">
+				<TextBlock x:Name="txtBreadcrumb" Text="Mis Rutinas  >  Crear Nueva Rutina" FontSize="11" Foreground="#A855F7" Margin="0,0,0,4"/>
+				<TextBlock x:Name="txtTitulo" Text="Crear Nueva Rutina" FontSize="26" FontWeight="Bold" Foreground="White"/>
+			</StackPanel>
+
+			<StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+				<Button x:Name="btnCancelar" Content="Cancelar" Width="90" Height="36"
+                        Background="#222222" Foreground="#CCCCCC" BorderBrush="#333333" Margin="0,0,10,0"
+                        Click="btnCancelar_Click"/>
+				<Button x:Name="btnGuardarRutina" Content="Guardar Rutina" Width="130" Height="36"
+                        Background="#A855F7" Foreground="White" FontWeight="SemiBold" BorderThickness="0"
+                        Click="btnGuardarRutina_Click"/>
+			</StackPanel>
+		</DockPanel>
+
+		<!-- Scroll con formulario y lista de ejercicios -->
+		<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="1.2*"/>
+					<ColumnDefinition Width="20"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+
+				<!-- Bloque izquierdo: Info de la Rutina -->
+				<Border Grid.Row="0" Grid.Column="0" Background="#161616" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="8" Padding="20">
+					<StackPanel>
+						<TextBlock Text="Información de la Rutina" FontSize="15" FontWeight="Bold" Foreground="White" Margin="0,0,0,15"/>
+
+						<TextBlock Text="Nombre de la Rutina" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+						<TextBox x:Name="txtNombre" Background="#0D0D0D" Foreground="White" BorderBrush="#333333" Padding="8" Margin="0,0,0,14"/>
+
+						<TextBlock Text="Socio Asignado" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+						<ComboBox x:Name="cmbSocios" Style="{StaticResource ComboBoxOscuro}" Margin="0,0,0,14"
+                                  DisplayMemberPath="NombreCompleto" SelectedValuePath="Id"/>
+
+						<Grid Margin="0,0,0,14">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="15"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+							<StackPanel Grid.Column="0">
+								<TextBlock Text="Duración (Semanas)" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+								<TextBox x:Name="txtSemanas" Text="4" Background="#0D0D0D" Foreground="White" BorderBrush="#333333" Padding="8"/>
+							</StackPanel>
+							<StackPanel Grid.Column="2">
+								<TextBlock Text="Frecuencia Semanal" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+								<ComboBox x:Name="cmbFrecuencia" Style="{StaticResource ComboBoxOscuro}">
+									<ComboBoxItem Content="2 días / semana"/>
+									<ComboBoxItem Content="3 días / semana" IsSelected="True"/>
+									<ComboBoxItem Content="4 días / semana"/>
+									<ComboBoxItem Content="5 días / semana"/>
+								</ComboBox>
+							</StackPanel>
+						</Grid>
+
+						<TextBlock Text="Objetivo" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+						<TextBox x:Name="txtObjetivo" Background="#0D0D0D" Foreground="White" BorderBrush="#333333"
+                                 Padding="8" Height="65" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,14"/>
+
+						<TextBlock Text="Nivel" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,6"/>
+						<StackPanel Orientation="Horizontal">
+							<RadioButton x:Name="rbPrincipiante" Content="Principiante" GroupName="Nivel" IsChecked="True" Foreground="#CCCCCC" Margin="0,0,15,0"/>
+							<RadioButton x:Name="rbIntermedio" Content="Intermedio" GroupName="Nivel" Foreground="#CCCCCC" Margin="0,0,15,0"/>
+							<RadioButton x:Name="rbAvanzado" Content="Avanzado" GroupName="Nivel" Foreground="#CCCCCC"/>
+						</StackPanel>
+					</StackPanel>
+				</Border>
+
+				<!-- Bloque derecho: Ejercicios -->
+				<Border Grid.Row="0" Grid.Column="2" Background="#161616" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="8" Padding="20">
+					<DockPanel>
+						<DockPanel DockPanel.Dock="Top" Margin="0,0,0,15">
+							<TextBlock Text="Ejercicios" FontSize="15" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+							<Button x:Name="btnAgregarEjercicio" Content="+ Agregar Ejercicio" HorizontalAlignment="Right"
+                                    Background="#2A2A3D" Foreground="#A855F7" BorderBrush="#A855F7" Padding="10,5"
+                                    Click="btnAgregarEjercicio_Click"/>
+						</DockPanel>
+
+						<ItemsControl x:Name="icEjercicios">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Background="#202020" BorderBrush="#333333" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+										<DockPanel>
+											<Button Content="✕" DockPanel.Dock="Right" Background="Transparent" Foreground="#888888" BorderThickness="0" Margin="10,0,0,0"
+                                                    Click="btnEliminarEjercicio_Click"/>
+											<Border DockPanel.Dock="Right" Background="#2A1B3D" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+												<TextBlock Text="{Binding GrupoMuscular}" Foreground="#A855F7" FontSize="10"/>
+											</Border>
+											<StackPanel>
+												<TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold" FontSize="13"/>
+												<TextBlock Foreground="#888888" FontSize="11" Margin="0,3,0,0">
+													<Run Text="{Binding Series}"/>
+													<Run Text="×"/>
+													<Run Text="{Binding Repeticiones}"/>
+													<Run Text="  •  Descanso:"/>
+													<Run Text="{Binding DescansoSegundos}"/>
+													<Run Text="seg"/>
+												</TextBlock>
+											</StackPanel>
+										</DockPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</DockPanel>
+				</Border>
+
+				<!-- Bloque inferior: Notas Adicionales -->
+				<Border Grid.Row="1" Grid.ColumnSpan="3" Background="#161616" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,20,0,0">
+					<StackPanel>
+						<TextBlock Text="Notas Adicionales" FontSize="15" FontWeight="Bold" Foreground="White" Margin="0,0,0,10"/>
+						<TextBox x:Name="txtNotas" Background="#0D0D0D" Foreground="White" BorderBrush="#333333"
+                                 Padding="8" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+					</StackPanel>
+				</Border>
+			</Grid>
+		</ScrollViewer>
+	</Grid>
+</Window>
