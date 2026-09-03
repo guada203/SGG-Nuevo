@@ -17,6 +17,8 @@
             <StackPanel x:Name="panelAdmin" Visibility="Collapsed">
                 <Button x:Name="btnAdminInicio" Content="🏠  Inicio" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Inicio"/>
                 <Button x:Name="btnAdminUsuarios" Content="👤  Usuarios" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Usuarios"/>
+                <Button x:Name="btnAdminMembresias" Content="💳  Membresías" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Membresias"/>
+                <Button x:Name="btnAdminSocios" Content="🧑  Socios" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Socios"/>
                 <Button x:Name="btnAdminReportes" Content="📊  Reportes" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Reportes"/>
             </StackPanel>
 

@@ -1,0 +1,107 @@
+<Window x:Class="SGG.Formularios.Recepcionista.AltaSocio"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SGG - Nuevo Socio" Height="640" Width="520"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        MinHeight="520" MinWidth="420"
+        Background="#0D0D0D">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+
+        <StackPanel Margin="35">
+
+            <TextBlock Text="NUEVO SOCIO" FontSize="20" FontWeight="Bold"
+                       Foreground="White" Margin="0,0,0,25"/>
+
+            <!-- Nombre + Apellido -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Nombre" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtNombre" Height="34"
+                             Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                             Padding="8,0" VerticalContentAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Apellido" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtApellido" Height="34"
+                             Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                             Padding="8,0" VerticalContentAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- DNI + fecha nacimiento -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="DNI" Foreground="#AAAAAA" FontSize="12" Margin="0,22,0,5"/>
+                    <TextBox x:Name="txtDni" Height="34"
+                             Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                             Padding="8,0" VerticalContentAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Fecha de nacimiento" Foreground="#AAAAAA" FontSize="12" Margin="0,22,0,5"/>
+                    <DatePicker x:Name="dpNacimiento" Height="34"
+                                Background="#1A1A1A" Foreground="White"
+                                Margin="0,0,0,15"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Teléfono + email -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Teléfono" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtTelefono" Height="34"
+                             Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                             Padding="8,0" VerticalContentAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Email" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtEmail" Height="34"
+                             Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                             Padding="8,0" VerticalContentAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="Membresía" Foreground="#AAAAAA" FontSize="12" Margin="0,22,0,5"/>
+            <ComboBox x:Name="cmbMembresia" Height="34"
+                      DisplayMemberPath="Descripcion"
+                      SelectedValuePath="Id"
+                      Margin="0,0,0,20">
+            </ComboBox>
+
+            <TextBlock x:Name="txtError"
+                       Foreground="#FF5555" FontSize="12"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,15"
+                       Visibility="Collapsed"/>
+
+            <Button Content="REGISTRAR SOCIO" Height="38"
+                    Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                    BorderThickness="0" Cursor="Hand"
+                    Click="btnRegistrar_Click"/>
+
+        </StackPanel>
+
+    </ScrollViewer>
+</Window>

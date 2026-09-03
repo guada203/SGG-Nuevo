@@ -13,6 +13,15 @@ namespace SGG.Formularios.Recepcionista
         public RegistrarPago()
         {
             InitializeComponent();
+            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
+            try
+            {
+                menuLateral.ConfigurarRol("Recepcionista");
+            }
+            catch
+            {
+                // Ignorar errores de configuración del menú
+            }
             CargarDatosDeEjemplo();
             cmbSocio.ItemsSource = Socios;
             dgPagos.ItemsSource = Pagos;
@@ -80,32 +89,34 @@ namespace SGG.Formularios.Recepcionista
             txtError.Visibility = Visibility.Collapsed;
         }
 
-        private void btnInicio_Click(object sender, RoutedEventArgs e)
+        private void ManejarOpcionSeleccionada(string opcion)
         {
-            var dashboard = new VentanaPrincipalRecepcionista();
-            dashboard.Show();
-            this.Close();
-        }
-
-        private void btnSocios_Click(object sender, RoutedEventArgs e)
-        {
-            var gestionSocios = new GestionSocios();
-            gestionSocios.Show();
-            this.Close();
-        }
-
-        private void btnAsistencia_Click(object sender, RoutedEventArgs e)
-        {
-            var controlAsistencia = new ControlAsistencia();
-            controlAsistencia.Show();
-            this.Close();
-        }
-
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var ventanaRol = new VentanaSeleccionRol();
-            ventanaRol.Show();
-            this.Close();
+            switch (opcion)
+            {
+                case "Inicio":
+                    var dashboard = new VentanaPrincipalRecepcionista();
+                    dashboard.Show();
+                    this.Close();
+                    break;
+                case "Socios":
+                    var gestionSocios = new GestionSocios();
+                    gestionSocios.Show();
+                    this.Close();
+                    break;
+                case "Pagos":
+                    // Ya estamos acá, no hacemos nada
+                    break;
+                case "Asistencia":
+                    var controlAsistencia = new ControlAsistencia();
+                    controlAsistencia.Show();
+                    this.Close();
+                    break;
+                case "CerrarSesion":
+                    var ventanaRol = new VentanaSeleccionRol();
+                    ventanaRol.Show();
+                    this.Close();
+                    break;
+            }
         }
     }
 

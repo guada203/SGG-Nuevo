@@ -1,8 +1,8 @@
-﻿<Window x:Class="SGG.Formularios.Recepcionista.GestionSocios"
+<Window x:Class="SGG.Formularios.Admin.GestionSociosAdmin"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controles="clr-namespace:SGG.Controles"
-        Title="SGG - Gestión de Socios" Height="650" Width="1100"
+        Title="SGG - Gestión de Socios (Admin)" Height="650" Width="1100"
         WindowStartupLocation="CenterScreen"
         Background="#0D0D0D">
 
@@ -23,17 +23,13 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Título + botón nuevo -->
+            <!-- Título -->
             <Grid Grid.Row="0" Margin="0,0,0,25">
                 <StackPanel HorizontalAlignment="Left">
                     <TextBlock Text="GESTIÓN DE SOCIOS" FontSize="24" FontWeight="Bold" Foreground="White"/>
                     <TextBlock x:Name="txtCantidadSocios" Text="0 socios registrados" 
                                FontSize="13" Foreground="#888888" Margin="0,3,0,0"/>
                 </StackPanel>
-                <Button Content="+ NUEVO SOCIO" HorizontalAlignment="Right" 
-                        Background="#3B82F6" Foreground="White" FontWeight="Bold" 
-                        Padding="18,10" BorderThickness="0" Cursor="Hand"
-                        Click="btnNuevoSocio_Click"/>
             </Grid>
 
             <!-- Buscador -->
@@ -56,7 +52,16 @@
                     <DataGridTextColumn Header="DNI" Binding="{Binding Dni}" Width="110"/>
                     <DataGridTextColumn Header="Plan" Binding="{Binding Plan}" Width="130"/>
                     <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="100"/>
-                    <DataGridTextColumn Header="Vence" Binding="{Binding Vence}" Width="110"/>
+                    <DataGridTemplateColumn Header="Acciones" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button x:Name="btnBaja" Content="{Binding AccionBaja}"
+                                        Padding="10,4" 
+                                        Foreground="#FF5555"
+                                        Click="btnBaja_Click" Tag="{Binding Id}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 

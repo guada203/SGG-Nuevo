@@ -45,6 +45,16 @@ namespace SGG.Formularios.Admin
                     gestionUsuarios.Show();
                     this.Close();
                     break;
+                case "Membresias":
+                    var gestionMembresias = new GestionMembresias();
+                    gestionMembresias.Show();
+                    this.Close();
+                    break;
+                case "Socios":
+                    var gestionSociosAdmin = new GestionSociosAdmin();
+                    gestionSociosAdmin.Show();
+                    this.Close();
+                    break;
                 case "Reportes":
                     // Ya estamos en la de reportes, no hacer nada
                     break;

@@ -1,25 +1,24 @@
-﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using SGG.Formularios.Login;
 using SGG.Logica.Servicios;
 
-namespace SGG.Formularios.Recepcionista
+namespace SGG.Formularios.Admin
 {
-    public partial class GestionSocios : Window
+    public partial class GestionSociosAdmin : Window
     {
         private readonly ServicioSocios _servicioSocios = new();
-        private ObservableCollection<SocioVista> _todosLosSocios = new();
-        public ObservableCollection<SocioVista> Socios { get; set; } = new();
+        private ObservableCollection<SocioAdminVista> _todosLosSocios = new();
+        public ObservableCollection<SocioAdminVista> Socios { get; set; } = new();
 
-        public GestionSocios()
+        public GestionSociosAdmin()
         {
             InitializeComponent();
             menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
             try
             {
-                menuLateral.ConfigurarRol("Recepcionista");
+                menuLateral.ConfigurarRol("Administrador");
             }
             catch
             {
@@ -34,21 +33,26 @@ namespace SGG.Formularios.Recepcionista
             switch (opcion)
             {
                 case "Inicio":
-                    var dashboard = new VentanaPrincipalRecepcionista();
+                    var dashboard = new VentanaPrincipalAdmin();
                     dashboard.Show();
+                    this.Close();
+                    break;
+                case "Usuarios":
+                    var usuarios = new GestionUsuarios();
+                    usuarios.Show();
+                    this.Close();
+                    break;
+                case "Membresias":
+                    var membresias = new GestionMembresias();
+                    membresias.Show();
                     this.Close();
                     break;
                 case "Socios":
                     // Ya estamos acá, no hacemos nada
                     break;
-                case "Pagos":
-                    var registrarPago = new RegistrarPago();
-                    registrarPago.Show();
-                    this.Close();
-                    break;
-                case "Asistencia":
-                    var controlAsistencia = new ControlAsistencia();
-                    controlAsistencia.Show();
+                case "Reportes":
+                    var reportes = new Reportes();
+                    reportes.Show();
                     this.Close();
                     break;
                 case "CerrarSesion":
@@ -61,17 +65,16 @@ namespace SGG.Formularios.Recepcionista
 
         private void CargarSocios()
         {
-            var sociosReales = _servicioSocios.ObtenerTodos();
+            var reales = _servicioSocios.ObtenerTodos();
 
-            _todosLosSocios = new ObservableCollection<SocioVista>(
-                sociosReales.Select(s => new SocioVista
+            _todosLosSocios = new ObservableCollection<SocioAdminVista>(
+                reales.Select(s => new SocioAdminVista
                 {
                     Id = s.Id,
                     NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
                     Dni = s.Dni,
                     Plan = s.Membresia?.TipoActividad.ToString() ?? "Sin plan",
-                    Estado = s.Activo ? "Activo" : "Inactivo",
-                    Vence = s.Membresia?.FechaVencimiento.ToShortDateString() ?? "-"
+                    Estado = s.Activo ? "Activo" : "Inactivo"
                 })
             );
 
@@ -101,21 +104,47 @@ namespace SGG.Formularios.Recepcionista
                 Socios.Add(s);
         }
 
-        private void btnNuevoSocio_Click(object sender, RoutedEventArgs e)
+        private void btnBaja_Click(object sender, RoutedEventArgs e)
         {
-            var ventanaAlta = new AltaSocio();
-            if (ventanaAlta.ShowDialog() == true)
-                CargarSocios();
+            var boton = (System.Windows.Controls.Button)sender;
+            int id = (int)boton.Tag;
+
+            var socio = _todosLosSocios.FirstOrDefault(s => s.Id == id);
+            if (socio == null) return;
+
+            bool esActivo = socio.Estado == "Activo";
+            string accion = esActivo ? "dar de baja" : "reactivar";
+
+            var confirmacion = MessageBox.Show(
+                $"¿Seguro que querés {accion} a {socio.NombreCompleto}?",
+                "Confirmar",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmacion != MessageBoxResult.Yes)
+                return;
+
+            var resultado = esActivo
+                ? _servicioSocios.DarDeBaja(id)
+                : _servicioSocios.Reactivar(id);
+
+            if (!resultado.Exitoso)
+            {
+                MessageBox.Show(resultado.Mensaje, "Atención", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            CargarSocios();
         }
     }
 
-    public class SocioVista
+    public class SocioAdminVista
     {
         public int Id { get; set; }
         public string NombreCompleto { get; set; } = string.Empty;
         public string Dni { get; set; } = string.Empty;
         public string Plan { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
-        public string Vence { get; set; } = string.Empty;
+        public string AccionBaja => Estado == "Activo" ? "DAR DE BAJA" : "REACTIVAR";
     }
 }

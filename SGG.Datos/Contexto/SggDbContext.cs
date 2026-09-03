@@ -31,6 +31,12 @@ namespace SGG.Datos.Contexto
             modelBuilder.Entity<Rol>()
                 .HasIndex(r => r.Nombre)
                 .IsUnique();
+
+            // Membresias.TipoActividad se guarda como texto ("Musculacion"/"Funcional"/"Combinado")
+            // en la base, no como int. Sin esta conversión EF intenta castear el string a int y falla.
+            modelBuilder.Entity<Membresia>()
+                .Property(m => m.TipoActividad)
+                .HasConversion<string>();
         }
     }
 }
