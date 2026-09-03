@@ -18,7 +18,42 @@ namespace SGG.Formularios.Admin
         public Reportes()
         {
             InitializeComponent();
+            // Suscribirse a los eventos del menú lateral para navegación
+            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
+            // Mostrar opciones de administrador en el menú lateral
+            try
+            {
+                menuLateral.ConfigurarRol("Administrador");
+            }
+            catch
+            {
+            }
             MostrarReportePagos(); // pestaña por defecto al abrir
+        }
+
+        private void ManejarOpcionSeleccionada(string opcion)
+        {
+            switch (opcion)
+            {
+                case "Inicio":
+                    var dashboard = new VentanaPrincipalAdmin();
+                    dashboard.Show();
+                    this.Close();
+                    break;
+                case "Usuarios":
+                    var gestionUsuarios = new GestionUsuarios();
+                    gestionUsuarios.Show();
+                    this.Close();
+                    break;
+                case "Reportes":
+                    // Ya estamos en la de reportes, no hacer nada
+                    break;
+                case "CerrarSesion":
+                    var ventanaRol = new VentanaSeleccionRol();
+                    ventanaRol.Show();
+                    this.Close();
+                    break;
+            }
         }
 
         // ---------- Manejo de pestañas ----------

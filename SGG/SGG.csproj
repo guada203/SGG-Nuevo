@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Logica\**" />
+    <EmbeddedResource Remove="Logica\**" />
+    <None Remove="Logica\**" />
+    <Page Remove="Logica\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SGG.Datos\SGG.Datos.csproj" />
     <ProjectReference Include="..\SGG.Logica\SGG.Logica.csproj" />
   </ItemGroup>

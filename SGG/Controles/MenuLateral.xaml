@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="SGG.Controles.MenuLateral"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             mc:Ignorable="d"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+
+    <Border Background="#1A1A1A" BorderBrush="#2A2A2A" BorderThickness="0,0,1,0">
+        <StackPanel Margin="0,30,0,0">
+
+            <TextBlock Text="SGG" FontSize="22" FontWeight="Bold" 
+                       Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+            <TextBlock x:Name="txtRol" Text="ROL" FontSize="10" Foreground="#C5FF00" 
+                       HorizontalAlignment="Center" Margin="0,0,0,40"/>
+
+            <!-- Botones específicos de Admin -->
+            <StackPanel x:Name="panelAdmin" Visibility="Collapsed">
+                <Button x:Name="btnAdminInicio" Content="🏠  Inicio" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Inicio"/>
+                <Button x:Name="btnAdminUsuarios" Content="👤  Usuarios" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Usuarios"/>
+                <Button x:Name="btnAdminReportes" Content="📊  Reportes" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Reportes"/>
+            </StackPanel>
+
+            <!-- Botones específicos de Recepcionista -->
+            <StackPanel x:Name="panelRecepcionista" Visibility="Collapsed">
+                <Button x:Name="btnRecepInicio" Content="🏠  Inicio" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Inicio"/>
+                <Button x:Name="btnRecepSocios" Content="🧑  Socios" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Socios"/>
+                <Button x:Name="btnRecepPagos" Content="💳  Pagos" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Pagos"/>
+                <Button x:Name="btnRecepAsistencia" Content="✅  Asistencia" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Asistencia"/>
+            </StackPanel>
+
+            <Border Height="1" Background="#2A2A2A" Margin="20,30,20,20"/>
+
+            <Button Content="⏻  Cerrar sesión" Style="{StaticResource BotonMenu}" 
+                    Foreground="#FF5555" Click="Navegar_Click" Tag="CerrarSesion"/>
+
+        </StackPanel>
+    </Border>
+</UserControl>

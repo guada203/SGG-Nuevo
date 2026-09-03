@@ -1,52 +1,62 @@
 ﻿using SGG.Formularios.Login;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using SGG.Logica.Servicios;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace SGG.Formularios.Admin
 {
     public partial class VentanaPrincipalAdmin : Window
     {
+        private readonly ServicioDashboard _servicioDashboard = new();
+
         public VentanaPrincipalAdmin()
         {
             InitializeComponent();
+            // Suscribirse a los eventos del menú lateral para navegación
+            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
+
+            // Configurar el menú lateral para el rol administrador (muestra los botones correspondientes)
+            try
+            {
+                menuLateral.ConfigurarRol("Administrador");
+            }
+            catch
+            {
+                // Evitar que una excepción en la configuración del menú impida que la ventana se muestre
+            }
+
+            CargarDatosDashboard();
         }
 
-        private void btnInicio_Click(object sender, RoutedEventArgs e)
+        private void CargarDatosDashboard()
         {
-
-            var reportes = new Reportes();
-            reportes.Show();
-            this.Close();
+            txtTotalSocios.Text = _servicioDashboard.ObtenerCantidadSociosActivos().ToString();
+            txtTotalUsuarios.Text = _servicioDashboard.ObtenerCantidadUsuarios().ToString();
+            txtIngresosMes.Text = _servicioDashboard.ObtenerIngresosDelMes().ToString("C0");
         }
 
-        private void btnUsuarios_Click(object sender, RoutedEventArgs e)
+        private void ManejarOpcionSeleccionada(string opcion)
         {
-            var gestionUsuarios = new GestionUsuarios();
-            gestionUsuarios.Show();
-            this.Close();
-        }
-
-        private void btnReportes_Click(object sender, RoutedEventArgs e)
-        {
-            var reportes = new Reportes();
-            reportes.Show();
-            this.Close();
-        }
-
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var ventanaRol = new VentanaSeleccionRol();
-            ventanaRol.Show();
-            this.Close();
+            switch (opcion)
+            {
+                case "Inicio":
+                    // Ya estamos en el dashboard, no hacemos nada
+                    break;
+                case "Usuarios":
+                    var gestionUsuarios = new GestionUsuarios();
+                    gestionUsuarios.Show();
+                    this.Close();
+                    break;
+                case "Reportes":
+                    var reportes = new Reportes();
+                    reportes.Show();
+                    this.Close();
+                    break;
+                case "CerrarSesion":
+                    var ventanaRol = new VentanaSeleccionRol();
+                    ventanaRol.Show();
+                    this.Close();
+                    break;
+            }
         }
     }
 }

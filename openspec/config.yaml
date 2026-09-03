@@ -1,0 +1,25 @@
+project: sgg-nuevo
+stack: .net-10.0-wpf
+mode: hybrid
+testing:
+  strict_tdd: false
+  test_command: null
+  coverage_threshold: 80
+  linter: null
+  type_checker: null
+  formatter: null
+
+conventions:
+  naming: StudlyCase for classes, camelCase for functions
+  imports: explicit namespace usage
+  error_handling: result pattern or exceptions with finally for cleanup
+
+layers:
+  domain: SGG.Dominio
+  data: SGG.Datos
+  logic: SGG.Logica
+  presentation: SGG
+
+persistence:
+  mode: both
+  engram_topic: sdd-init/sgg-nuevo

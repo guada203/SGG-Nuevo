@@ -1,39 +1,76 @@
-﻿using SGG.Formularios.Login;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
+﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using SGG.Formularios.Login;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Admin
 {
     public partial class GestionUsuarios : Window
     {
+        private readonly ServicioUsuarios _servicioUsuarios = new();
         private ObservableCollection<UsuarioVista> _todosLosUsuarios = new();
         public ObservableCollection<UsuarioVista> Usuarios { get; set; } = new();
 
         public GestionUsuarios()
         {
             InitializeComponent();
-            CargarDatosDeEjemplo();
+            // Suscribirse a los eventos del menú lateral para navegación
+            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
+            // Mostrar opciones de administrador en el menú lateral
+            try
+            {
+                menuLateral.ConfigurarRol("Administrador");
+            }
+            catch
+            {
+                // Ignorar errores de configuración del menú
+            }
+            CargarUsuarios();
             dgUsuarios.ItemsSource = Usuarios;
         }
 
-        private void CargarDatosDeEjemplo()
+        private void ManejarOpcionSeleccionada(string opcion)
         {
-            // TODO: reemplazar por datos reales desde SGG.Logica cuando conectemos la BD
-            _todosLosUsuarios.Add(new UsuarioVista { Id = 1, Nombre = "Carlos Rueda", Email = "carlos.r@sgg.com", Rol = "Administrador", Estado = "Activo" });
-            _todosLosUsuarios.Add(new UsuarioVista { Id = 2, Nombre = "Mónica Herrera", Email = "monica.h@sgg.com", Rol = "Recepcionista", Estado = "Activo" });
-            _todosLosUsuarios.Add(new UsuarioVista { Id = 3, Nombre = "Andrés Mora", Email = "andres.m@sgg.com", Rol = "Entrenador", Estado = "Activo" });
-            _todosLosUsuarios.Add(new UsuarioVista { Id = 4, Nombre = "María Salcedo", Email = "maria.s@sgg.com", Rol = "Entrenador", Estado = "Activo" });
+            switch (opcion)
+            {
+                case "Inicio":
+                    var dashboard = new VentanaPrincipalAdmin();
+                    dashboard.Show();
+                    this.Close();
+                    break;
+                case "Usuarios":
+                    // Ya estamos acá, no hacemos nada
+                    break;
+                case "Reportes":
+                    var reportes = new Reportes();
+                    reportes.Show();
+                    this.Close();
+                    break;
+                case "CerrarSesion":
+                    var ventanaRol = new VentanaSeleccionRol();
+                    ventanaRol.Show();
+                    this.Close();
+                    break;
+            }
+        }
 
+        private void CargarUsuarios()
+        {
+            var usuariosReales = _servicioUsuarios.ObtenerTodos();
+
+            _todosLosUsuarios = new ObservableCollection<UsuarioVista>(
+                usuariosReales.Select(u => new UsuarioVista
+                {
+                    Id = u.Id,
+                    Nombre = u.Nombre,
+                    Email = u.Email,
+                    Rol = u.Rol?.Nombre ?? string.Empty,
+                    Estado = u.Activo ? "Activo" : "Inactivo"
+                })
+            );
+
+            Usuarios.Clear();
             foreach (var u in _todosLosUsuarios)
                 Usuarios.Add(u);
 
@@ -43,9 +80,9 @@ namespace SGG.Formularios.Admin
         private void ActualizarContadores()
         {
             txtCantidadUsuarios.Text = $"{_todosLosUsuarios.Count} usuarios registrados en el sistema";
-            txtCantAdmins.Text = _todosLosUsuarios.Count(u => u.Rol == "Administrador").ToString();
-            txtCantRecepcionistas.Text = _todosLosUsuarios.Count(u => u.Rol == "Recepcionista").ToString();
-            txtCantEntrenadores.Text = _todosLosUsuarios.Count(u => u.Rol == "Entrenador").ToString();
+            txtCantAdmins.Text = _todosLosUsuarios.Count(u => u.Rol == "Administrador" && u.Estado == "Activo").ToString();
+            txtCantRecepcionistas.Text = _todosLosUsuarios.Count(u => u.Rol == "Recepcionista" && u.Estado == "Activo").ToString();
+            txtCantEntrenadores.Text = _todosLosUsuarios.Count(u => u.Rol == "Entrenador" && u.Estado == "Activo").ToString();
         }
 
         private void txtBuscar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -63,41 +100,46 @@ namespace SGG.Formularios.Admin
 
         private void btnNuevoUsuario_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Acá vamos a abrir el formulario de alta de usuario.");
+            var ventanaAlta = new AltaUsuario();
+            ventanaAlta.ShowDialog(); // se abre como modal, espera a que se cierre
+            CargarUsuarios(); // al volver, recargamos la lista por si se agregó uno nuevo
         }
 
         private void btnEditar_Click(object sender, RoutedEventArgs e)
         {
             var boton = (System.Windows.Controls.Button)sender;
-            MessageBox.Show($"Editar usuario Id: {boton.Tag}");
+            MessageBox.Show($"Editar usuario Id: {boton.Tag} (pendiente de implementar).");
         }
 
-        private void btnDarBaja_Click(object sender, RoutedEventArgs e)
+        private void ToggleActivo_Click(object sender, RoutedEventArgs e)
         {
-            var boton = (System.Windows.Controls.Button)sender;
-            MessageBox.Show($"Dar de baja usuario Id: {boton.Tag}");
-        }
+            var toggle = (System.Windows.Controls.Primitives.ToggleButton)sender;
+            int id = (int)toggle.Tag;
 
-        private void btnInicio_Click(object sender, RoutedEventArgs e)
-        {
-            var dashboard = new VentanaPrincipalAdmin();
-            dashboard.Show();
-            this.Close();
-        }
+            var usuario = _todosLosUsuarios.FirstOrDefault(u => u.Id == id);
+            if (usuario == null) return;
 
-        private void btnReportes_Click(object sender, RoutedEventArgs e)
-        {
+            bool eraActivo = usuario.EsActivo;
+            string accion = eraActivo ? "dar de baja" : "reactivar";
 
-            var reportes = new Reportes();
-            reportes.Show();
-            this.Close();
-        }
+            var confirmacion = MessageBox.Show(
+                $"¿Seguro que querés {accion} a {usuario.Nombre}?",
+                "Confirmar",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
 
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var ventanaRol = new VentanaSeleccionRol();
-            ventanaRol.Show();
-            this.Close();
+            if (confirmacion != MessageBoxResult.Yes)
+            {
+                CargarUsuarios(); // revierte visualmente el toggle si cancela
+                return;
+            }
+
+            if (eraActivo)
+                _servicioUsuarios.DarDeBaja(id);
+            else
+                _servicioUsuarios.Reactivar(id);
+
+            CargarUsuarios();
         }
     }
 
@@ -108,5 +150,6 @@ namespace SGG.Formularios.Admin
         public string Email { get; set; } = string.Empty;
         public string Rol { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
+        public bool EsActivo => Estado == "Activo";
     }
 }

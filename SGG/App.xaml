@@ -19,5 +19,30 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="ToggleSwitch" TargetType="ToggleButton">
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Fondo" CornerRadius="12" 
+                                Background="#444444">
+                            <Ellipse x:Name="Circulo" Width="18" Height="18" 
+                                     Fill="White" HorizontalAlignment="Left" 
+                                     Margin="3,0,0,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Fondo" Property="Background" Value="#4ADE80"/>
+                                <Setter TargetName="Circulo" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="Circulo" Property="Margin" Value="0,0,3,0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>

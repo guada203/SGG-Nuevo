@@ -6,6 +6,7 @@ namespace SGG.Logica.Servicios
     public class ServicioAutenticacion
     {
         private readonly UsuarioRepositorio _usuarioRepositorio = new();
+        private readonly RolRepositorio _rolRepositorio = new();
 
         public ResultadoLogin ValidarCredenciales(string email, string password, string rolEsperado)
         {
@@ -18,7 +19,8 @@ namespace SGG.Logica.Servicios
             if (!passwordValida)
                 return new ResultadoLogin(false, "Usuario o contraseña incorrectos.");
 
-            if (usuario.Rol != rolEsperado)
+            var rol = _rolRepositorio.ObtenerPorNombre(rolEsperado);
+            if (rol == null || usuario.RolId != rol.Id)
                 return new ResultadoLogin(false, $"Este usuario no tiene permisos de {rolEsperado}.");
 
             return new ResultadoLogin(true, "Login exitoso.", usuario);
