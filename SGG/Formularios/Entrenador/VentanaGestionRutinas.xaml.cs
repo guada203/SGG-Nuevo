@@ -91,6 +91,24 @@ namespace SGG.Formularios.Entrenador
                 return;
             }
 
+            if (!int.TryParse(txtSemanas.Text, out int semanas) || semanas <= 0)
+            {
+                MessageBox.Show("La duración debe ser un número mayor a cero.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (Ejercicios.Count == 0)
+            {
+                MessageBox.Show("Agregá al menos un ejercicio a la rutina.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtObjetivo.Text))
+            {
+                MessageBox.Show("Por favor, ingresá el objetivo de la rutina.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             string nombreRutina = txtNombre.Text;
             string mensaje = _modoEdicion
                 ? $"Rutina '{nombreRutina}' actualizada correctamente (simulado)."
@@ -115,14 +133,30 @@ namespace SGG.Formularios.Entrenador
 
         private void btnAgregarEjercicio_Click(object sender, RoutedEventArgs e)
         {
-            Ejercicios.Add(new EjercicioItem
+            var ventana = new VentanaEditarEjercicio();
+            ventana.Owner = this;
+            bool? resultado = ventana.ShowDialog();
+
+            if (resultado == true)
             {
-                Nombre = "Nuevo Ejercicio",
-                GrupoMuscular = "General",
-                Series = 3,
-                Repeticiones = 12,
-                DescansoSegundos = 60
-            });
+                Ejercicios.Add(ventana.Resultado);
+            }
+        }
+
+        private void btnEditarEjercicio_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement elemento && elemento.DataContext is EjercicioItem ejercicioActual)
+            {
+                var ventana = new VentanaEditarEjercicio(ejercicioActual);
+                ventana.Owner = this;
+                bool? resultado = ventana.ShowDialog();
+
+                if (resultado == true)
+                {
+                    int indice = Ejercicios.IndexOf(ejercicioActual);
+                    Ejercicios[indice] = ventana.Resultado;
+                }
+            }
         }
     }
 
