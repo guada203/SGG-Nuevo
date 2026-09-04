@@ -44,6 +44,8 @@ namespace SGG.Controles
                 ? Visibility.Visible : Visibility.Collapsed;
             panelRecepcionista.Visibility = string.Equals(rolNorm, "Recepcionista", System.StringComparison.OrdinalIgnoreCase)
                 ? Visibility.Visible : Visibility.Collapsed;
+            panelEntrenador.Visibility = string.Equals(rolNorm, "Entrenador", System.StringComparison.OrdinalIgnoreCase)
+                ? Visibility.Visible : Visibility.Collapsed;
 
             // Aplicar el botón activo por defecto (según SeccionActiva)
             MarcarActivo(SeccionActiva);
@@ -52,7 +54,7 @@ namespace SGG.Controles
         // Resalta el botón cuyo Tag coincida con el parámetro; resto quedan Transparent
         private void MarcarActivo(string tagBotonActivo)
         {
-            foreach (var panel in new[] { panelAdmin, panelRecepcionista })
+            foreach (var panel in new[] { panelAdmin, panelRecepcionista, panelEntrenador })
             {
                 foreach (var child in panel.Children)
                 {

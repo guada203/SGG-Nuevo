@@ -63,9 +63,11 @@ namespace SGG.Formularios.Login
                 ventanaRecepcionista.Show();
                 this.Close();
             }
-            else
+            else if (_rolSeleccionado == "Entrenador")
             {
-                MessageBox.Show($"¡Bienvenido {resultado.Usuario!.Nombre}! (Rol: {_rolSeleccionado})");
+                var ventanaEntrenador = new SGG.Formularios.Entrenador.VentanaPrincipalEntrenador();
+                ventanaEntrenador.Show();
+                this.Close();
             }
         }
 

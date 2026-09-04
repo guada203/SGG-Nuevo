@@ -30,6 +30,12 @@
                 <Button x:Name="btnRecepAsistencia" Content="✅  Asistencia" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Asistencia"/>
             </StackPanel>
 
+            <!-- Botones específicos de Entrenador -->
+            <StackPanel x:Name="panelEntrenador" Visibility="Collapsed">
+                <Button x:Name="btnEntrenadorInicio" Content="🏠  Inicio" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Inicio"/>
+                <Button x:Name="btnEntrenadorRutinas" Content="🏋  Mis Rutinas" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Rutinas"/>
+            </StackPanel>
+
             <Border Height="1" Background="#2A2A2A" Margin="20,30,20,20"/>
 
             <Button Content="⏻  Cerrar sesión" Style="{StaticResource BotonMenu}" 

@@ -11,16 +11,13 @@ namespace SGG.Formularios.Entrenador
         public VentanaPrincipalEntrenador()
         {
             InitializeComponent();
+            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
+            menuLateral.ConfigurarRol("Entrenador");
             CargarDatosDePrueba();
         }
 
         private void CargarDatosDePrueba()
         {
-            txtBienvenida.Text = "¡Bienvenida, María!";
-            txtFecha.Text = DateTime.Now.ToString("dddd, d 'de' MMMM 'de' yyyy");
-            txtNombreUsuario.Text = "María Salcedo";
-            txtInicialUsuario.Text = "M";
-
             txtRutinasCreadas.Text = "24";
             txtSociosAsignados.Text = "18";
             txtRutinasActivas.Text = "15";
@@ -41,16 +38,23 @@ namespace SGG.Formularios.Entrenador
             };
         }
 
-        private void btnInicio_Click(object sender, RoutedEventArgs e)
+        private void ManejarOpcionSeleccionada(string opcion)
         {
-            // Ya estamos en Inicio, no hace falta hacer nada.
-        }
-
-        private void btnRutinas_Click(object sender, RoutedEventArgs e)
-        {
-            var listaRutinas = new VentanaListaRutinas();
-            listaRutinas.Show();
-            this.Close();
+            switch (opcion)
+            {
+                case "Inicio":
+                    break;
+                case "Rutinas":
+                    var listaRutinas = new VentanaListaRutinas();
+                    listaRutinas.Show();
+                    this.Close();
+                    break;
+                case "CerrarSesion":
+                    var ventanaRol = new VentanaSeleccionRol();
+                    ventanaRol.Show();
+                    this.Close();
+                    break;
+            }
         }
 
         private void btnCrearRutina_Click(object sender, RoutedEventArgs e)
@@ -71,13 +75,6 @@ namespace SGG.Formularios.Entrenador
                 gestionRutinas.Owner = this;
                 gestionRutinas.ShowDialog();
             }
-        }
-
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var ventanaRol = new VentanaSeleccionRol();
-            ventanaRol.Show();
-            this.Close();
         }
     }
 

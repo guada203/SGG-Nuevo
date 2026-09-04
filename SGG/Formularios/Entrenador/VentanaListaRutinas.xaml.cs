@@ -14,6 +14,8 @@ namespace SGG.Formularios.Entrenador
         public VentanaListaRutinas()
         {
             InitializeComponent();
+            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
+            menuLateral.ConfigurarRol("Entrenador");
             CargarDatosDePrueba();
             AplicarFiltros();
         }
@@ -49,6 +51,25 @@ namespace SGG.Formularios.Entrenador
             }
 
             icRutinas.ItemsSource = resultado.ToList();
+        }
+
+        private void ManejarOpcionSeleccionada(string opcion)
+        {
+            switch (opcion)
+            {
+                case "Inicio":
+                    var inicio = new VentanaPrincipalEntrenador();
+                    inicio.Show();
+                    this.Close();
+                    break;
+                case "Rutinas":
+                    break;
+                case "CerrarSesion":
+                    var ventanaRol = new VentanaSeleccionRol();
+                    ventanaRol.Show();
+                    this.Close();
+                    break;
+            }
         }
 
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
@@ -105,20 +126,6 @@ namespace SGG.Formularios.Entrenador
                     $"Rutina: {rutina.Nombre}\nSocio: {rutina.SocioNombre}\nDuración: {rutina.DuracionSemanas} semanas\nEjercicios: {rutina.CantidadEjercicios}\nEstado: {rutina.Estado}",
                     "Detalle de la rutina");
             }
-        }
-
-        private void btnInicio_Click(object sender, RoutedEventArgs e)
-        {
-            var inicio = new VentanaPrincipalEntrenador();
-            inicio.Show();
-            this.Close();
-        }
-
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var ventanaRol = new VentanaSeleccionRol();
-            ventanaRol.Show();
-            this.Close();
         }
     }
 
