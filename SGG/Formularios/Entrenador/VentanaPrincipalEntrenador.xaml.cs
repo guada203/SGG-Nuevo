@@ -60,6 +60,13 @@ namespace SGG.Formularios.Entrenador
             gestionRutinas.ShowDialog();
         }
 
+        private void btnVerAlumnos_Click(object sender, RoutedEventArgs e)
+        {
+            var misAlumnos = new VentanaMisAlumnos();
+            misAlumnos.Owner = this;
+            misAlumnos.ShowDialog();
+        }
+
         private void btnAsignarDesdeInicio_Click(object sender, RoutedEventArgs e)
         {
             var boton = sender as Button;
@@ -67,9 +74,9 @@ namespace SGG.Formularios.Entrenador
 
             if (socio != null)
             {
-                var gestionRutinas = new VentanaGestionRutinas(socio.SocioId);
-                gestionRutinas.Owner = this;
-                gestionRutinas.ShowDialog();
+                var elegir = new VentanaElegirRutina(socio.SocioId);
+                elegir.Owner = this;
+                elegir.ShowDialog();
             }
         }
 

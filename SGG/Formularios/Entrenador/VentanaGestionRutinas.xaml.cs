@@ -38,7 +38,37 @@ namespace SGG.Formularios.Entrenador
             var socios = (List<SocioComboItem>)cmbSocios.ItemsSource;
             cmbSocios.SelectedItem = socios.FirstOrDefault(s => s.Id == rutinaAEditar.SocioId);
 
-            switch (rutinaAEditar.FrecuenciaSemanal)
+            SeleccionarFrecuencia(rutinaAEditar.FrecuenciaSemanal);
+            SeleccionarNivel(rutinaAEditar.Nivel);
+
+            txtBreadcrumb.Text = "Mis Rutinas  >  Editar Rutina";
+            txtTitulo.Text = "Editar Rutina";
+            btnGuardarRutina.Content = "Guardar Cambios";
+            this.Title = "SGG - Editar Rutina";
+        }
+
+        // Constructor 4: Crear una rutina NUEVA para un socio, basándose en una rutina existente como plantilla
+        public VentanaGestionRutinas(RutinaListItem plantilla, int nuevoSocioId) : this()
+        {
+            txtNombre.Text = plantilla.Nombre;
+            txtObjetivo.Text = plantilla.Objetivo;
+            txtSemanas.Text = plantilla.DuracionSemanas.ToString();
+
+            var socios = (List<SocioComboItem>)cmbSocios.ItemsSource;
+            cmbSocios.SelectedItem = socios.FirstOrDefault(s => s.Id == nuevoSocioId);
+
+            SeleccionarFrecuencia(plantilla.FrecuenciaSemanal);
+            SeleccionarNivel(plantilla.Nivel);
+
+            // Ojo: _modoEdicion queda en false a propósito -- esto es una rutina NUEVA
+            // (una copia para otro socio), no una modificación de la original.
+            txtBreadcrumb.Text = "Mis Alumnos  >  Nueva Rutina";
+            txtTitulo.Text = $"Nueva Rutina (basada en \"{plantilla.Nombre}\")";
+        }
+
+        private void SeleccionarFrecuencia(int frecuencia)
+        {
+            switch (frecuencia)
             {
                 case 2: cmbFrecuencia.SelectedIndex = 0; break;
                 case 3: cmbFrecuencia.SelectedIndex = 1; break;
@@ -46,18 +76,16 @@ namespace SGG.Formularios.Entrenador
                 case 5: cmbFrecuencia.SelectedIndex = 3; break;
                 default: cmbFrecuencia.SelectedIndex = 1; break;
             }
+        }
 
-            switch (rutinaAEditar.Nivel)
+        private void SeleccionarNivel(string nivel)
+        {
+            switch (nivel)
             {
                 case "Principiante": rbPrincipiante.IsChecked = true; break;
                 case "Intermedio": rbIntermedio.IsChecked = true; break;
                 case "Avanzado": rbAvanzado.IsChecked = true; break;
             }
-
-            txtBreadcrumb.Text = "Mis Rutinas  >  Editar Rutina";
-            txtTitulo.Text = "Editar Rutina";
-            btnGuardarRutina.Content = "Guardar Cambios";
-            this.Title = "SGG - Editar Rutina";
         }
 
         private void InicializarDatos()
