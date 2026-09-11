@@ -24,6 +24,16 @@ namespace SGG.Formularios.Entrenador
                 Close();
                 return;
             }
+
+            // "Mis Alumnos" es una ventana modal (no un panel del shell).
+            if (opcion == "Alumnos")
+            {
+                var misAlumnos = new VentanaMisAlumnos { Owner = this };
+                misAlumnos.ShowDialog();
+                MostrarContenido("Inicio"); // limpia el estado visual del menú
+                return;
+            }
+
             MostrarContenido(opcion);
         }
 
