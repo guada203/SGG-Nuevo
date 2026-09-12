@@ -93,6 +93,22 @@ StartupUri="Formularios/Login/VentanaSeleccionRol.xaml">
                                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                               Margin="{TemplateBinding Padding}"
                                               VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                            <!-- Caja de edición para ComboBox con IsEditable=True (búsqueda por tipeo).
+                                 Solo se muestra en ese modo; la columna de la derecha queda libre
+                                 para que el clic llegue al ToggleButton y abra el dropdown. -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="24"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" x:Name="PART_EditableTextBox"
+                                         IsReadOnly="{TemplateBinding IsReadOnly}"
+                                         Background="Transparent" Foreground="White"
+                                         BorderThickness="0" CaretBrush="White"
+                                         Margin="{TemplateBinding Padding}"
+                                         VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                         Visibility="Hidden"/>
+                            </Grid>
                             <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
                                    AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                                 <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" CornerRadius="4"
@@ -104,6 +120,12 @@ StartupUri="Formularios/Login/VentanaSeleccionRol.xaml">
                                 </Border>
                             </Popup>
                         </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

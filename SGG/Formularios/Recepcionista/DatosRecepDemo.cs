@@ -40,6 +40,14 @@ namespace SGG.Formularios.Recepcionista
         public string Metodo { get; set; } = string.Empty; // Efectivo / Tarjeta / Transferencia
     }
 
+    /// <summary>Precio del catálogo de membresías (definido por el admin, demo).</summary>
+    public class PrecioMembresiaDemo
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string Etiqueta => $"{Nombre} — ${Monto.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))}";
+    }
+
     /// <summary>Registro de asistencia (ingreso) demo.</summary>
     public class AsistenciaDemo
     {
@@ -59,6 +67,14 @@ namespace SGG.Formularios.Recepcionista
         private static readonly List<PagoDemo> _pagos = CrearPagos();
         private static readonly List<AsistenciaDemo> _asistencias = CrearAsistencias();
 
+        // TODO integración BD: reemplazar por el catálogo real de membresías (SGG.Datos) cuando corresponda.
+        private static readonly List<PrecioMembresiaDemo> _preciosMembresias = new()
+        {
+            new PrecioMembresiaDemo { Nombre = "Musculación", Monto = 18000m },
+            new PrecioMembresiaDemo { Nombre = "Funcional", Monto = 15000m },
+            new PrecioMembresiaDemo { Nombre = "Combinado", Monto = 22000m }
+        };
+
         public static List<SocioDemo> Socios => _socios;
         public static List<PagoDemo> Pagos => _pagos;
         public static List<AsistenciaDemo> Asistencias => _asistencias;
@@ -71,6 +87,9 @@ namespace SGG.Formularios.Recepcionista
 
         /// <summary>Copia viva de la lista de asistencias.</summary>
         public static List<AsistenciaDemo> ObtenerAsistencias() => new(_asistencias);
+
+        /// <summary>Copia viva del catálogo de precios de membresías.</summary>
+        public static List<PrecioMembresiaDemo> ObtenerPreciosMembresias() => new(_preciosMembresias);
 
         /// <summary>Serie de 6 montos simulados para el gráfico del dashboard (creciente).</summary>
         public static decimal[] IngresosPorMes() => new[] { 180000m, 195000m, 210000m, 240000m, 265000m, 285000m };
