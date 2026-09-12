@@ -18,6 +18,9 @@ namespace SGG.Formularios.Admin
             txtTitulo.Text = "NUEVA MEMBRESÍA";
             btnGuardar.Content = "GUARDAR MEMBRESÍA";
             cmbActividad.SelectedIndex = 0;
+            // Defectos visibles: el usuario los ve y puede cambiarlos (nunca fechas vacías silenciosas).
+            dpInicio.SelectedDate = DateTime.Today;
+            dpVencimiento.SelectedDate = DateTime.Today.AddMonths(1);
         }
 
         public AltaMembresia(int id) : this()
@@ -73,8 +76,32 @@ namespace SGG.Formularios.Admin
                 return;
             }
 
-            DateTime fechaInicio = dpInicio.SelectedDate ?? DateTime.Today;
-            DateTime fechaVencimiento = dpVencimiento.SelectedDate ?? DateTime.Today;
+            if (precio <= 0)
+            {
+                MostrarError("El precio debe ser mayor que cero.");
+                return;
+            }
+
+            if (dpInicio.SelectedDate == null)
+            {
+                MostrarError("Debe seleccionar la fecha de inicio.");
+                return;
+            }
+
+            if (dpVencimiento.SelectedDate == null)
+            {
+                MostrarError("Debe seleccionar la fecha de vencimiento.");
+                return;
+            }
+
+            DateTime fechaInicio = dpInicio.SelectedDate.Value;
+            DateTime fechaVencimiento = dpVencimiento.SelectedDate.Value;
+
+            if (fechaVencimiento <= fechaInicio)
+            {
+                MostrarError("La fecha de vencimiento debe ser posterior a la fecha de inicio.");
+                return;
+            }
 
             var resultado = _membresiaId.HasValue
                 ? _servicioMembresias.EditarMembresia(_membresiaId.Value, tipoActividad, precio, fechaInicio, fechaVencimiento)

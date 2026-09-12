@@ -11,7 +11,7 @@
 
         <StackPanel Margin="35">
 
-            <TextBlock Text="NUEVO SOCIO" FontSize="20" FontWeight="Bold"
+            <TextBlock x:Name="txtTitulo" Text="NUEVO SOCIO" FontSize="20" FontWeight="Bold"
                        Foreground="White" Margin="0,0,0,25"/>
 
             <!-- Nombre + Apellido -->
@@ -50,6 +50,9 @@
                     <TextBox x:Name="txtDni" Height="34"
                              Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
                              Padding="8,0" VerticalContentAlignment="Center"/>
+                    <TextBlock x:Name="txtDniAyuda" Text="El DNI no se puede modificar" 
+                               Foreground="#888888" FontSize="11" Margin="0,5,0,0"
+                               Visibility="Collapsed"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
@@ -84,7 +87,7 @@
             </Grid>
 
             <TextBlock Text="Membresía" Foreground="#AAAAAA" FontSize="12" Margin="0,22,0,5"/>
-            <ComboBox x:Name="cmbMembresia" Height="34"
+            <ComboBox x:Name="cmbMembresia" Style="{StaticResource ComboBoxOscuro}" Height="34"
                       DisplayMemberPath="Descripcion"
                       SelectedValuePath="Id"
                       Margin="0,0,0,20">
@@ -96,7 +99,7 @@
                        Margin="0,0,0,15"
                        Visibility="Collapsed"/>
 
-            <Button Content="REGISTRAR SOCIO" Height="38"
+            <Button x:Name="btnRegistrar" Content="REGISTRAR SOCIO" Height="38"
                     Background="#3B82F6" Foreground="White" FontWeight="Bold"
                     BorderThickness="0" Cursor="Hand"
                     Click="btnRegistrar_Click"/>

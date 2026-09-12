@@ -1,0 +1,160 @@
+<UserControl x:Class="SGG.Formularios.Admin.PanelInicioAdmin"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="35">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Encabezado -->
+        <Grid Grid.Row="0">
+            <StackPanel HorizontalAlignment="Left">
+                <TextBlock x:Name="txtSaludo" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Resumen general del sistema" FontSize="13" 
+                           Foreground="#888888" Margin="0,3,0,0"/>
+            </StackPanel>
+            <TextBlock x:Name="txtFecha" FontSize="13" Foreground="#AAAAAA" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- Tarjetas de KPIs -->
+        <Grid Grid.Row="1" Margin="0,25,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Socios activos -->
+            <Border Grid.Row="0" Grid.Column="0" Background="#181818" BorderBrush="#C5FF00" Margin="0,0,15,15" 
+                    BorderThickness="0,3,0,0" CornerRadius="8">
+                <StackPanel Margin="18" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="#888888">
+                        <Run Text="👥 "/><Run Text="Socios activos"/>
+                    </TextBlock>
+                    <TextBlock x:Name="txtTotalSocios" Text="—" FontSize="26" FontWeight="Bold" 
+                               Foreground="#C5FF00" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="txtTendenciaSocios" Text="▲ +2 vs. mes anterior" FontSize="10" 
+                               Foreground="#5BE49B" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Usuarios del sistema -->
+            <Border Grid.Row="0" Grid.Column="1" Background="#181818" BorderBrush="#3B82F6" Margin="0,0,15,15" 
+                    BorderThickness="0,3,0,0" CornerRadius="8">
+                <StackPanel Margin="18" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="#888888">
+                        <Run Text="🧑‍💼 "/><Run Text="Usuarios del sistema"/>
+                    </TextBlock>
+                    <TextBlock x:Name="txtTotalUsuarios" Text="—" FontSize="26" FontWeight="Bold" 
+                               Foreground="#3B82F6" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="txtTendenciaUsuarios" Text="● Sin cambios" FontSize="10" 
+                               Foreground="#888888" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Ingresos del mes -->
+            <Border Grid.Row="0" Grid.Column="2" Background="#181818" BorderBrush="#A855F7" Margin="0,0,0,15" 
+                    BorderThickness="0,3,0,0" CornerRadius="8">
+                <StackPanel Margin="18" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="#888888">
+                        <Run Text="💰 "/><Run Text="Ingresos del mes"/>
+                    </TextBlock>
+                    <TextBlock x:Name="txtIngresosMes" Text="—" FontSize="26" FontWeight="Bold" 
+                               Foreground="#A855F7" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="txtTendenciaIngresos" Text="● Sin cambios" FontSize="10" 
+                               Foreground="#888888" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Socios inactivos -->
+            <Border Grid.Row="1" Grid.Column="0" Background="#181818" BorderBrush="#FF5555" Margin="0,0,15,0" 
+                    BorderThickness="0,3,0,0" CornerRadius="8">
+                <StackPanel Margin="18" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="#888888">
+                        <Run Text="🚫 "/><Run Text="Socios inactivos"/>
+                    </TextBlock>
+                    <TextBlock x:Name="txtSociosInactivos" Text="—" FontSize="26" FontWeight="Bold" 
+                               Foreground="#FF5555" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="txtTendenciaInactivos" Text="▼ -1 vs. mes anterior" FontSize="10" 
+                               Foreground="#888888" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Nuevos socios del mes -->
+            <Border Grid.Row="1" Grid.Column="1" Background="#181818" BorderBrush="#3B82F6" Margin="0,0,15,0" 
+                    BorderThickness="0,3,0,0" CornerRadius="8">
+                <StackPanel Margin="18" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="#888888">
+                        <Run Text="🆕 "/><Run Text="Nuevos socios del mes"/>
+                    </TextBlock>
+                    <TextBlock x:Name="txtSociosNuevosMes" Text="—" FontSize="26" FontWeight="Bold" 
+                               Foreground="#3B82F6" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="txtTendenciaNuevos" Text="▲ vs. mes anterior" FontSize="10" 
+                               Foreground="#3B82F6" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Membresías por vencer (alerta) -->
+            <Border Grid.Row="1" Grid.Column="2" Background="#26F59E0B" BorderBrush="#F59E0B" 
+                    BorderThickness="1" CornerRadius="8">
+                <StackPanel Margin="18" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" Foreground="#888888">
+                        <Run Text="⏳ "/><Run Text="Membresías por vencer"/>
+                    </TextBlock>
+                    <TextBlock Text="próximos 30 días" FontSize="10" Foreground="#E6B800" Margin="0,1,0,0"/>
+                    <TextBlock x:Name="txtMembresiasPorVencer" Text="—" FontSize="26" FontWeight="Bold" 
+                               Foreground="#F59E0B" Margin="0,3,0,0"/>
+                    <TextBlock x:Name="txtTendenciaVencer" Text="▲ +1 próx. 30 días" FontSize="10" 
+                               Foreground="#F59E0B" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+        </Grid>
+
+        <!-- Área inferior: gráfico de ingresos y actividad reciente -->
+        <Grid Grid.Row="2" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Gráfico de barras -->
+            <Border Grid.Column="0" Background="#181818" CornerRadius="8" Padding="18" Margin="0,0,15,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="📈 Ingresos últimos 6 meses" FontSize="14" 
+                               FontWeight="SemiBold" Foreground="White" Margin="0,0,0,15"/>
+                    <StackPanel Grid.Row="1" x:Name="spBarras" Orientation="Horizontal" 
+                                VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
+                </Grid>
+            </Border>
+
+            <!-- Actividad reciente -->
+            <Border Grid.Column="1" Background="#181818" CornerRadius="8" Padding="18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="🕓 Actividad reciente" FontSize="14" 
+                               FontWeight="SemiBold" Foreground="White" Margin="0,0,0,10"/>
+                    <StackPanel Grid.Row="1" x:Name="spActividad"/>
+                </Grid>
+            </Border>
+
+        </Grid>
+
+    </Grid>
+</UserControl>

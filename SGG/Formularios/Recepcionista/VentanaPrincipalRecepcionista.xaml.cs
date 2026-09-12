@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using SGG.Formularios.Login;
 
 namespace SGG.Formularios.Recepcionista
@@ -8,44 +9,38 @@ namespace SGG.Formularios.Recepcionista
         public VentanaPrincipalRecepcionista()
         {
             InitializeComponent();
+            menuLateral.ConfigurarRol("Recepcionista");
             menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
-            try
-            {
-                menuLateral.ConfigurarRol("Recepcionista");
-            }
-            catch
-            {
-                // Ignorar errores de configuración del menú
-            }
+            MostrarContenido("Inicio");
         }
 
         private void ManejarOpcionSeleccionada(string opcion)
         {
-            switch (opcion)
+            if (opcion == "CerrarSesion")
             {
-                case "Inicio":
-                    // Ya estamos acá, no hacemos nada
-                    break;
-                case "Socios":
-                    var gestionSocios = new GestionSocios();
-                    gestionSocios.Show();
-                    this.Close();
-                    break;
-                case "Pagos":
-                    var registrarPago = new RegistrarPago();
-                    registrarPago.Show();
-                    this.Close();
-                    break;
-                case "Asistencia":
-                    var controlAsistencia = new ControlAsistencia();
-                    controlAsistencia.Show();
-                    this.Close();
-                    break;
-                case "CerrarSesion":
-                    var ventanaRol = new VentanaSeleccionRol();
-                    ventanaRol.Show();
-                    this.Close();
-                    break;
+                Sesion.Limpiar();
+                var ventanaRol = new VentanaSeleccionRol();
+                ventanaRol.Show();
+                Close();
+                return;
+            }
+            MostrarContenido(opcion);
+        }
+
+        private void MostrarContenido(string opcion)
+        {
+            UserControl? control = opcion switch
+            {
+                "Inicio" => new PanelInicioRecepcionista(),
+                "Socios" => new GestionSocios(),
+                "Pagos" => new RegistrarPago(),
+                "Asistencia" => new ControlAsistencia(),
+                _ => null
+            };
+            if (control != null)
+            {
+                contenido.Content = control;
+                menuLateral.SeccionActiva = opcion;
             }
         }
     }

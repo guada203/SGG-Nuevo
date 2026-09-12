@@ -40,6 +40,40 @@ namespace SGG.Logica.Servicios
             return (true, "Usuario creado con éxito.");
         }
 
+        public Usuario? ObtenerPorId(int id)
+        {
+            return _usuarioRepositorio.ObtenerPorId(id);
+        }
+
+        public (bool Exitoso, string Mensaje) EditarUsuario(
+            int id, string nombre, string apellido, string? direccion, string? telefono,
+            string? dni, string email, int rolId, string? passwordNueva)
+        {
+            if (_usuarioRepositorio.ExisteEmailExcepto(email, id))
+                return (false, "Ya existe otro usuario con ese email.");
+
+            if (_usuarioRepositorio.ExisteDniExcepto(dni, id))
+                return (false, "Ya existe otro usuario con ese DNI.");
+
+            var usuario = _usuarioRepositorio.ObtenerPorId(id);
+            if (usuario == null)
+                return (false, "No se encontró el usuario.");
+
+            usuario.Nombre = nombre;
+            usuario.Apellido = apellido;
+            usuario.Direccion = direccion;
+            usuario.Telefono = telefono;
+            usuario.Dni = dni;
+            usuario.Email = email;
+            usuario.RolId = rolId;
+
+            if (!string.IsNullOrWhiteSpace(passwordNueva))
+                usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(passwordNueva);
+
+            _usuarioRepositorio.Actualizar(usuario);
+            return (true, "Usuario actualizado con éxito.");
+        }
+
         public void DarDeBaja(int id)
         {
             _usuarioRepositorio.DarDeBaja(id);

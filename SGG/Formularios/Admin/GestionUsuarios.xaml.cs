@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using SGG.Formularios.Login;
+using System.Windows.Controls;
 using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Admin
 {
-    public partial class GestionUsuarios : Window
+    public partial class GestionUsuarios : UserControl
     {
         private readonly ServicioUsuarios _servicioUsuarios = new();
         private ObservableCollection<UsuarioVista> _todosLosUsuarios = new();
@@ -15,54 +15,8 @@ namespace SGG.Formularios.Admin
         public GestionUsuarios()
         {
             InitializeComponent();
-            // Suscribirse a los eventos del menú lateral para navegación
-            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
-            // Mostrar opciones de administrador en el menú lateral
-            try
-            {
-                menuLateral.ConfigurarRol("Administrador");
-            }
-            catch
-            {
-                // Ignorar errores de configuración del menú
-            }
             CargarUsuarios();
             dgUsuarios.ItemsSource = Usuarios;
-        }
-
-        private void ManejarOpcionSeleccionada(string opcion)
-        {
-            switch (opcion)
-            {
-                case "Inicio":
-                    var dashboard = new VentanaPrincipalAdmin();
-                    dashboard.Show();
-                    this.Close();
-                    break;
-                case "Usuarios":
-                    // Ya estamos acá, no hacemos nada
-                    break;
-                case "Membresias":
-                    var gestionMembresias = new GestionMembresias();
-                    gestionMembresias.Show();
-                    this.Close();
-                    break;
-                case "Socios":
-                    var gestionSociosAdmin = new GestionSociosAdmin();
-                    gestionSociosAdmin.Show();
-                    this.Close();
-                    break;
-                case "Reportes":
-                    var reportes = new Reportes();
-                    reportes.Show();
-                    this.Close();
-                    break;
-                case "CerrarSesion":
-                    var ventanaRol = new VentanaSeleccionRol();
-                    ventanaRol.Show();
-                    this.Close();
-                    break;
-            }
         }
 
         private void CargarUsuarios()
@@ -73,7 +27,7 @@ namespace SGG.Formularios.Admin
                 usuariosReales.Select(u => new UsuarioVista
                 {
                     Id = u.Id,
-                    Nombre = u.Nombre,
+                    Nombre = string.IsNullOrWhiteSpace(u.Apellido) ? u.Nombre : $"{u.Nombre} {u.Apellido}",
                     Email = u.Email,
                     Rol = u.Rol?.Nombre ?? string.Empty,
                     Estado = u.Activo ? "Activo" : "Inactivo"
@@ -118,7 +72,9 @@ namespace SGG.Formularios.Admin
         private void btnEditar_Click(object sender, RoutedEventArgs e)
         {
             var boton = (System.Windows.Controls.Button)sender;
-            MessageBox.Show($"Editar usuario Id: {boton.Tag} (pendiente de implementar).");
+            var ventanaEdicion = new AltaUsuario((int)boton.Tag);
+            ventanaEdicion.ShowDialog(); // se abre como modal, espera a que se cierre
+            CargarUsuarios(); // al volver, recargamos la lista por si se modificaron datos
         }
 
         private void ToggleActivo_Click(object sender, RoutedEventArgs e)
@@ -131,6 +87,34 @@ namespace SGG.Formularios.Admin
 
             bool eraActivo = usuario.EsActivo;
             string accion = eraActivo ? "dar de baja" : "reactivar";
+
+            // Protección 1: un administrador no puede desactivar su propia cuenta.
+            if (eraActivo && Sesion.UsuarioId.HasValue && Sesion.UsuarioId.Value == id)
+            {
+                MessageBox.Show(
+                    "No podés desactivar tu propia cuenta. Pedile a otro administrador.",
+                    "Acción no permitida",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                CargarUsuarios(); // revierte visualmente el toggle
+                return;
+            }
+
+            // Protección 2: no se puede desactivar al último administrador activo.
+            if (eraActivo && usuario.Rol == "Administrador")
+            {
+                int adminsActivos = _todosLosUsuarios.Count(u => u.Rol == "Administrador" && u.EsActivo);
+                if (adminsActivos <= 1)
+                {
+                    MessageBox.Show(
+                        "No se puede desactivar el último Administrador activo del sistema.",
+                        "Acción no permitida",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    CargarUsuarios(); // revierte visualmente el toggle
+                    return;
+                }
+            }
 
             var confirmacion = MessageBox.Show(
                 $"¿Seguro que querés {accion} a {usuario.Nombre}?",

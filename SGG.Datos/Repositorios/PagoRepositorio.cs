@@ -23,5 +23,11 @@ namespace SGG.Datos.Repositorios
                 .Where(p => p.FechaPago.Month == ahora.Month && p.FechaPago.Year == ahora.Year)
                 .Sum(p => (decimal?)p.Monto) ?? 0;
         }
+
+        public List<Pago> ObtenerPagosDesde(DateTime desde)
+        {
+            using var contexto = new SggDbContext();
+            return contexto.Pagos.Where(p => p.FechaPago >= desde).ToList();
+        }
     }
 }

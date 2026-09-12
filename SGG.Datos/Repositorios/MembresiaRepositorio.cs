@@ -31,6 +31,21 @@ namespace SGG.Datos.Repositorios
             return contexto.Membresias.Find(id);
         }
 
+        // Membresías de socios ACTIVOS cuyo vencimiento cae entre hoy y hoy + dias.
+        // Se consulta desde Socios (que tiene la navegación a Membresia) para poder filtrar por estado del socio.
+        public int ContarPorVencer(int dias)
+        {
+            using var contexto = new SggDbContext();
+            var hoy = DateTime.Today;
+            var limite = hoy.AddDays(dias);
+
+            return contexto.Socios
+                .Where(s => s.Activo
+                    && s.Membresia.FechaVencimiento >= hoy
+                    && s.Membresia.FechaVencimiento <= limite)
+                .Count();
+        }
+
         public void Agregar(Membresia membresia)
         {
             using var contexto = new SggDbContext();

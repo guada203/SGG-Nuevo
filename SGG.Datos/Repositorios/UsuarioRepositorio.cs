@@ -8,6 +8,21 @@ namespace SGG.Datos.Repositorios
 {
     public class UsuarioRepositorio
     {
+        public Usuario? ObtenerPorId(int id)
+        {
+            using var contexto = new SggDbContext();
+            return contexto.Usuarios
+                .Include(u => u.Rol)
+                .FirstOrDefault(u => u.Id == id);
+        }
+
+        public void Actualizar(Usuario usuario)
+        {
+            using var contexto = new SggDbContext();
+            contexto.Usuarios.Update(usuario);
+            contexto.SaveChanges();
+        }
+
         public Usuario? ObtenerPorEmail(string email)
         {
             using var contexto = new SggDbContext();
@@ -62,6 +77,19 @@ namespace SGG.Datos.Repositorios
             using var contexto = new SggDbContext();
             return !string.IsNullOrWhiteSpace(dni)
                 && contexto.Usuarios.Any(u => u.Dni == dni);
+        }
+
+        public bool ExisteEmailExcepto(string email, int excluirId)
+        {
+            using var contexto = new SggDbContext();
+            return contexto.Usuarios.Any(u => u.Email == email && u.Id != excluirId);
+        }
+
+        public bool ExisteDniExcepto(string? dni, int excluirId)
+        {
+            using var contexto = new SggDbContext();
+            return !string.IsNullOrWhiteSpace(dni)
+                && contexto.Usuarios.Any(u => u.Dni == dni && u.Id != excluirId);
         }
     }
 }

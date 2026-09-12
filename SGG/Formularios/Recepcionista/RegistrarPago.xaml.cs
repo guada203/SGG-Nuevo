@@ -1,81 +1,97 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
-using SGG.Formularios.Login;
+using System.Windows.Controls;
 
 namespace SGG.Formularios.Recepcionista
 {
-    public partial class RegistrarPago : Window
+    public partial class RegistrarPago : UserControl
     {
+        private static readonly CultureInfo EsAr = new("es-AR");
+
         public ObservableCollection<SocioVista> Socios { get; set; } = new();
         public ObservableCollection<PagoVista> Pagos { get; set; } = new();
 
         public RegistrarPago()
         {
             InitializeComponent();
-            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
-            try
-            {
-                menuLateral.ConfigurarRol("Recepcionista");
-            }
-            catch
-            {
-                // Ignorar errores de configuración del menú
-            }
-            CargarDatosDeEjemplo();
+            CargarSocios();
+            CargarPagos();
             cmbSocio.ItemsSource = Socios;
             dgPagos.ItemsSource = Pagos;
         }
 
-        private void CargarDatosDeEjemplo()
+        private void CargarSocios()
         {
-            // TODO: reemplazar por datos reales desde SGG.Logica / EF Core
-            Socios.Add(new SocioVista { Id = 1, NombreCompleto = "Carolina Méndez" });
-            Socios.Add(new SocioVista { Id = 2, NombreCompleto = "Tomás Restrepo" });
-            Socios.Add(new SocioVista { Id = 3, NombreCompleto = "Lucía Vargas" });
+            foreach (var s in DatosRecepDemo.ObtenerSocios())
+            {
+                Socios.Add(new SocioVista
+                {
+                    Id = s.Id,
+                    NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
+                    EstadoCuota = DatosRecepDemo.EstadoCuota(s)
+                });
+            }
+        }
 
-            Pagos.Add(new PagoVista { Socio = "Carolina Méndez", Monto = "$18.000", Fecha = "01/08/2026", Metodo = "Efectivo" });
-            Pagos.Add(new PagoVista { Socio = "Tomás Restrepo", Monto = "$15.000", Fecha = "03/08/2026", Metodo = "Tarjeta" });
+        private void CargarPagos()
+        {
+            var pagos = DatosRecepDemo.ObtenerPagos()
+                .OrderByDescending(p => p.Fecha)
+                .Select(p => new PagoVista
+                {
+                    Socio = p.SocioNombre,
+                    Monto = $"${p.Monto.ToString("N0", EsAr)}",
+                    Fecha = p.Fecha.ToString("dd/MM/yyyy"),
+                    Metodo = p.Metodo
+                });
+
+            foreach (var p in pagos)
+                Pagos.Add(p);
         }
 
         private void btnRegistrarPago_Click(object sender, RoutedEventArgs e)
         {
-            OcultarError();
+            OcultarAvisos();
 
-            if (cmbSocio.SelectedItem == null)
+            if (cmbSocio.SelectedItem is not SocioVista socio)
             {
                 MostrarError("Debe seleccionar un socio.");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtMonto.Text) || !decimal.TryParse(txtMonto.Text, out decimal monto) || monto <= 0)
+            // En es-AR el "." es separador de miles y la "," es el decimal:
+            // acepta "18000", "18.000" y "18.000,50".
+            if (!decimal.TryParse(txtMonto.Text.Trim(), NumberStyles.Number, EsAr, out decimal monto) || monto <= 0)
             {
-                MostrarError("Ingrese un monto válido.");
+                MostrarError("Ingrese un monto válido (número decimal mayor a 0).");
                 return;
             }
 
-            if (cmbMetodoPago.SelectedItem == null)
+            if (cmbMetodoPago.SelectedItem is not ComboBoxItem metodoItem ||
+                string.IsNullOrWhiteSpace(metodoItem.Content?.ToString()))
             {
                 MostrarError("Debe seleccionar un método de pago.");
                 return;
             }
 
-            // TODO: acá va el registro real del pago contra SGG.Logica / EF Core (RF-05)
-            var socio = (SocioVista)cmbSocio.SelectedItem;
-            var metodo = ((System.Windows.Controls.ComboBoxItem)cmbMetodoPago.SelectedItem).Content.ToString();
-
-            Pagos.Add(new PagoVista
+            // TODO integración BD: acá se registra el pago real contra SGG.Logica / SGG.Datos (RF-05).
+            Pagos.Insert(0, new PagoVista
             {
                 Socio = socio.NombreCompleto,
-                Monto = $"${monto:N0}",
+                Monto = $"${monto.ToString("N0", EsAr)}",
                 Fecha = DateTime.Now.ToString("dd/MM/yyyy"),
-                Metodo = metodo ?? ""
+                Metodo = metodoItem.Content.ToString() ?? ""
             });
 
-            MessageBox.Show("Pago registrado con éxito (simulado).");
             txtMonto.Clear();
             cmbSocio.SelectedIndex = -1;
             cmbMetodoPago.SelectedIndex = -1;
+
+            txtExito.Text = "Pago registrado correctamente.";
+            txtExito.Visibility = Visibility.Visible;
         }
 
         private void MostrarError(string mensaje)
@@ -84,39 +100,10 @@ namespace SGG.Formularios.Recepcionista
             txtError.Visibility = Visibility.Visible;
         }
 
-        private void OcultarError()
+        private void OcultarAvisos()
         {
             txtError.Visibility = Visibility.Collapsed;
-        }
-
-        private void ManejarOpcionSeleccionada(string opcion)
-        {
-            switch (opcion)
-            {
-                case "Inicio":
-                    var dashboard = new VentanaPrincipalRecepcionista();
-                    dashboard.Show();
-                    this.Close();
-                    break;
-                case "Socios":
-                    var gestionSocios = new GestionSocios();
-                    gestionSocios.Show();
-                    this.Close();
-                    break;
-                case "Pagos":
-                    // Ya estamos acá, no hacemos nada
-                    break;
-                case "Asistencia":
-                    var controlAsistencia = new ControlAsistencia();
-                    controlAsistencia.Show();
-                    this.Close();
-                    break;
-                case "CerrarSesion":
-                    var ventanaRol = new VentanaSeleccionRol();
-                    ventanaRol.Show();
-                    this.Close();
-                    break;
-            }
+            txtExito.Visibility = Visibility.Collapsed;
         }
     }
 

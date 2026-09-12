@@ -2,76 +2,40 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using SGG.Formularios.Login;
-using SGG.Logica.Servicios;
+using System.Windows.Controls;
 
 namespace SGG.Formularios.Recepcionista
 {
-    public partial class GestionSocios : Window
+    public partial class GestionSocios : UserControl
     {
-        private readonly ServicioSocios _servicioSocios = new();
         private ObservableCollection<SocioVista> _todosLosSocios = new();
         public ObservableCollection<SocioVista> Socios { get; set; } = new();
 
         public GestionSocios()
         {
             InitializeComponent();
-            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
-            try
-            {
-                menuLateral.ConfigurarRol("Recepcionista");
-            }
-            catch
-            {
-                // Ignorar errores de configuración del menú
-            }
             CargarSocios();
             dgSocios.ItemsSource = Socios;
         }
 
-        private void ManejarOpcionSeleccionada(string opcion)
-        {
-            switch (opcion)
-            {
-                case "Inicio":
-                    var dashboard = new VentanaPrincipalRecepcionista();
-                    dashboard.Show();
-                    this.Close();
-                    break;
-                case "Socios":
-                    // Ya estamos acá, no hacemos nada
-                    break;
-                case "Pagos":
-                    var registrarPago = new RegistrarPago();
-                    registrarPago.Show();
-                    this.Close();
-                    break;
-                case "Asistencia":
-                    var controlAsistencia = new ControlAsistencia();
-                    controlAsistencia.Show();
-                    this.Close();
-                    break;
-                case "CerrarSesion":
-                    var ventanaRol = new VentanaSeleccionRol();
-                    ventanaRol.Show();
-                    this.Close();
-                    break;
-            }
-        }
-
         private void CargarSocios()
         {
-            var sociosReales = _servicioSocios.ObtenerTodos();
+            // TODO integración BD: en la fase de conexión esto se reemplaza por
+            // ServicioSocios.ObtenerTodos() (SGG.Logica / SGG.Datos).
+            var sociosDemo = DatosRecepDemo.ObtenerSocios();
 
             _todosLosSocios = new ObservableCollection<SocioVista>(
-                sociosReales.Select(s => new SocioVista
+                sociosDemo.Select(s => new SocioVista
                 {
                     Id = s.Id,
-                    NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
+                    NombreCompleto = s.NombreCompleto,
                     Dni = s.Dni,
-                    Plan = s.Membresia?.TipoActividad.ToString() ?? "Sin plan",
+                    Plan = s.TipoMembresia,
                     Estado = s.Activo ? "Activo" : "Inactivo",
-                    Vence = s.Membresia?.FechaVencimiento.ToShortDateString() ?? "-"
+                    Vence = s.FechaVencimiento < DateTime.Today
+                        ? "Vencida"
+                        : s.FechaVencimiento.ToShortDateString(),
+                    EstadoCuota = DatosRecepDemo.EstadoCuota(s)
                 })
             );
 
@@ -88,12 +52,13 @@ namespace SGG.Formularios.Recepcionista
             txtCantidadSocios.Text = $"{_todosLosSocios.Count} socios registrados ({activos} activos)";
         }
 
-        private void txtBuscar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void AplicarFiltro()
         {
-            string filtro = txtBuscar.Text.ToLower();
+            string filtro = txtBuscar.Text.Trim().ToLower();
             Socios.Clear();
 
             var resultado = _todosLosSocios.Where(s =>
+                string.IsNullOrEmpty(filtro) ||
                 s.NombreCompleto.ToLower().Contains(filtro) ||
                 s.Dni.Contains(filtro));
 
@@ -101,11 +66,58 @@ namespace SGG.Formularios.Recepcionista
                 Socios.Add(s);
         }
 
+        private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            AplicarFiltro();
+        }
+
         private void btnNuevoSocio_Click(object sender, RoutedEventArgs e)
         {
             var ventanaAlta = new AltaSocio();
             if (ventanaAlta.ShowDialog() == true)
                 CargarSocios();
+        }
+
+        private void btnEditar_Click(object sender, RoutedEventArgs e)
+        {
+            var boton = (Button)sender;
+            int id = (int)boton.Tag;
+
+            var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.Id == id);
+            if (demo == null) return;
+
+            var ventana = new AltaSocio(demo);
+            if (ventana.ShowDialog() == true)
+                CargarSocios();
+        }
+
+        private void btnBaja_Click(object sender, RoutedEventArgs e)
+        {
+            var boton = (Button)sender;
+            int id = (int)boton.Tag;
+
+            var vista = _todosLosSocios.FirstOrDefault(s => s.Id == id);
+            var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.Id == id);
+            if (vista == null || demo == null) return;
+
+            bool esActivo = demo.Activo;
+            string accion = esActivo ? "dar de baja" : "reactivar";
+
+            var confirmacion = MessageBox.Show(
+                $"¿Seguro que querés {accion} a {vista.NombreCompleto}?",
+                "Confirmar",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmacion != MessageBoxResult.Yes)
+                return;
+
+            // RF-04: alternar el estado en la lista demo y refrescar la fila en vivo
+            demo.Activo = !demo.Activo;
+            vista.Estado = demo.Activo ? "Activo" : "Inactivo";
+
+            ActualizarContador();
+            AplicarFiltro();
         }
     }
 
@@ -117,5 +129,7 @@ namespace SGG.Formularios.Recepcionista
         public string Plan { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
         public string Vence { get; set; } = string.Empty;
+        public string EstadoCuota { get; set; } = string.Empty;
+        public string AccionBaja => Estado == "Activo" ? "DAR DE BAJA" : "REACTIVAR";
     }
 }

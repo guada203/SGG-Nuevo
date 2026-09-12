@@ -51,6 +51,8 @@ namespace SGG.Formularios.Login
                 return;
             }
 
+            Sesion.Iniciar(resultado.Usuario!);
+
             if (_rolSeleccionado == "Administrador")
             {
                 var ventanaAdmin = new VentanaPrincipalAdmin();

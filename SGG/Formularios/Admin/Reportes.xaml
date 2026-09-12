@@ -1,36 +1,24 @@
-﻿<Window x:Class="SGG.Formularios.Admin.Reportes"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controles="clr-namespace:SGG.Controles"
-        Title="SGG - Reportes" Height="650" Width="1100"
-        WindowStartupLocation="CenterScreen"
-        Background="#0D0D0D">
+﻿<UserControl x:Class="SGG.Formularios.Admin.Reportes"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controles="clr-namespace:SGG.Controles">
+    <Grid Margin="35">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Row="0" Text="REPORTES" FontSize="24" FontWeight="Bold" 
+                   Foreground="White" Margin="0,0,0,5"/>
+        <TextBlock Grid.Row="0" Text="Generación de reportes del sistema" FontSize="13" 
+                   Foreground="#888888" Margin="0,32,0,25" VerticalAlignment="Top"/>
 
-        <!-- Menú lateral -->
-        <controles:MenuLateral x:Name="menuLateral" Grid.Column="0" SeccionActiva="Reportes" />
-
-        <!-- Contenido principal -->
-        <Grid Grid.Column="1" Margin="35">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Text="REPORTES" FontSize="24" FontWeight="Bold" 
-                       Foreground="White" Margin="0,0,0,5"/>
-            <TextBlock Grid.Row="0" Text="Generación de reportes del sistema" FontSize="13" 
-                       Foreground="#888888" Margin="0,32,0,25" VerticalAlignment="Top"/>
-
-            <!-- Pestañas -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
+        <!-- Pestañas + resumen -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                 <Button x:Name="tabPagos" Content="PAGOS" Padding="20,10" Margin="0,0,8,0"
                         Background="#C5FF00" Foreground="Black" FontWeight="Bold" BorderThickness="0"
                         Click="tabPagos_Click"/>
@@ -41,25 +29,50 @@
                         Background="#1A1A1A" Foreground="#AAAAAA" BorderBrush="#333333"
                         Click="tabSocios_Click"/>
             </StackPanel>
+            <TextBlock x:Name="txtResumen" FontSize="13" Foreground="#888888"/>
+        </StackPanel>
 
-            <!-- Tabla de datos (cambia según pestaña) -->
-            <DataGrid x:Name="dgReporte" Grid.Row="2" 
-                      Background="#0D0D0D" Foreground="White" BorderThickness="0"
-                      RowBackground="#0D0D0D" AlternatingRowBackground="#151515"
-                      AutoGenerateColumns="True" IsReadOnly="True" 
-                      GridLinesVisibility="None" HeadersVisibility="Column"
-                      CanUserAddRows="False"/>
-
-            <!-- Botones de exportar -->
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                <Button Content="📄  Exportar PDF" Padding="16,10" Margin="0,0,10,0"
-                        Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
-                        Cursor="Hand" Click="btnExportarPdf_Click"/>
-                <Button Content="📊  Exportar Excel" Padding="16,10"
-                        Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
-                        Cursor="Hand" Click="btnExportarExcel_Click"/>
+        <!-- Panel de tortas (se muestra/oculta según pestaña) -->
+        <Grid x:Name="panelTortas" Grid.Row="2" Margin="0,0,0,20">
+            <StackPanel x:Name="tortasPagos" Orientation="Horizontal">
+                <Border Background="#1A1A1A" CornerRadius="8" Padding="16" Margin="0,0,15,0">
+                    <StackPanel>
+                        <TextBlock Text="INGRESOS POR ACTIVIDAD" FontSize="11" Foreground="#888888"
+                                   FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <controles:GraficoTorta x:Name="tortaActividad" Width="240" Height="180"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="#1A1A1A" CornerRadius="8" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="MÉTODOS DE PAGO" FontSize="11" Foreground="#888888"
+                                   FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <controles:GraficoTorta x:Name="tortaMetodo" Width="240" Height="180"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-
+            <StackPanel x:Name="tortasSocios" Orientation="Horizontal" Visibility="Collapsed">
+                <Border Background="#1A1A1A" CornerRadius="8" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="DISTRIBUCIÓN DE SOCIOS" FontSize="11" Foreground="#888888"
+                                   FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <controles:GraficoTorta x:Name="tortaSocios" Width="240" Height="180"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
+
+        <!-- Tabla de datos (cambia según pestaña) -->
+        <DataGrid x:Name="dgReporte" Grid.Row="3"/>
+
+        <!-- Botones de exportar -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="📄  Exportar PDF" Padding="16,10" Margin="0,0,10,0"
+                    Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                    Cursor="Hand" Click="btnExportarPdf_Click"/>
+            <Button Content="📊  Exportar Excel" Padding="16,10"
+                    Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
+                    Cursor="Hand" Click="btnExportarExcel_Click"/>
+        </StackPanel>
+
     </Grid>
-</Window>
+</UserControl>

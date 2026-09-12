@@ -2,58 +2,15 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controles="clr-namespace:SGG.Controles"
-        Title="SGG - Administrador" Height="600" Width="950"
+        Title="SGG - Administrador" Height="700" Width="1150"
         WindowStartupLocation="CenterScreen"
         Background="#0D0D0D">
-
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-
-        <!-- Menú lateral -->
         <controles:MenuLateral x:Name="menuLateral" Grid.Column="0" SeccionActiva="Inicio" />
-
-        <!-- Panel principal -->
-        <StackPanel Grid.Column="1" Margin="35">
-
-            <TextBlock Text="Panel de Administrador" FontSize="24" FontWeight="Bold" 
-                       Foreground="White" Margin="0,0,0,5"/>
-            <TextBlock Text="Resumen general del sistema" FontSize="13" 
-                       Foreground="#888888" Margin="0,0,0,30"/>
-
-            <StackPanel Orientation="Horizontal">
-
-                <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" 
-                        CornerRadius="6" Width="180" Height="100" Margin="0,0,15,0">
-                    <StackPanel VerticalAlignment="Center" Margin="18">
-                        <TextBlock Text="Socios activos" FontSize="12" Foreground="#888888"/>
-                        <TextBlock x:Name="txtTotalSocios" Text="—" FontSize="26" FontWeight="Bold" 
-                                   Foreground="#C5FF00" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" 
-                        CornerRadius="6" Width="180" Height="100" Margin="0,0,15,0">
-                    <StackPanel VerticalAlignment="Center" Margin="18">
-                        <TextBlock Text="Usuarios del sistema" FontSize="12" Foreground="#888888"/>
-                        <TextBlock x:Name="txtTotalUsuarios" Text="—" FontSize="26" FontWeight="Bold" 
-                                   Foreground="#3B82F6" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" 
-                        CornerRadius="6" Width="180" Height="100">
-                    <StackPanel VerticalAlignment="Center" Margin="18">
-                        <TextBlock Text="Ingresos del mes" FontSize="12" Foreground="#888888"/>
-                        <TextBlock x:Name="txtIngresosMes" Text="—" FontSize="26" FontWeight="Bold" 
-                                   Foreground="#A855F7" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-
-            </StackPanel>
-
-        </StackPanel>
+        <ContentControl x:Name="contenido" Grid.Column="1"/>
     </Grid>
 </Window>

@@ -1,12 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using SGG.Formularios.Login;
+using System.Windows.Controls;
 using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Admin
 {
-    public partial class GestionSociosAdmin : Window
+    public partial class GestionSociosAdmin : UserControl
     {
         private readonly ServicioSocios _servicioSocios = new();
         private ObservableCollection<SocioAdminVista> _todosLosSocios = new();
@@ -15,52 +15,8 @@ namespace SGG.Formularios.Admin
         public GestionSociosAdmin()
         {
             InitializeComponent();
-            menuLateral.OpcionSeleccionada += ManejarOpcionSeleccionada;
-            try
-            {
-                menuLateral.ConfigurarRol("Administrador");
-            }
-            catch
-            {
-                // Ignorar errores de configuración del menú
-            }
             CargarSocios();
             dgSocios.ItemsSource = Socios;
-        }
-
-        private void ManejarOpcionSeleccionada(string opcion)
-        {
-            switch (opcion)
-            {
-                case "Inicio":
-                    var dashboard = new VentanaPrincipalAdmin();
-                    dashboard.Show();
-                    this.Close();
-                    break;
-                case "Usuarios":
-                    var usuarios = new GestionUsuarios();
-                    usuarios.Show();
-                    this.Close();
-                    break;
-                case "Membresias":
-                    var membresias = new GestionMembresias();
-                    membresias.Show();
-                    this.Close();
-                    break;
-                case "Socios":
-                    // Ya estamos acá, no hacemos nada
-                    break;
-                case "Reportes":
-                    var reportes = new Reportes();
-                    reportes.Show();
-                    this.Close();
-                    break;
-                case "CerrarSesion":
-                    var ventanaRol = new VentanaSeleccionRol();
-                    ventanaRol.Show();
-                    this.Close();
-                    break;
-            }
         }
 
         private void CargarSocios()
