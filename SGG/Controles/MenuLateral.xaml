@@ -34,6 +34,7 @@
             <StackPanel x:Name="panelEntrenador" Visibility="Collapsed">
                 <Button x:Name="btnEntrenadorInicio" Content="🏠  Inicio" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Inicio"/>
                 <Button x:Name="btnEntrenadorRutinas" Content="🏋  Mis Rutinas" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Rutinas"/>
+                <Button x:Name="btnEntrenadorAlumnos" Content="👥  Mis Alumnos" Style="{StaticResource BotonMenu}" Click="Navegar_Click" Tag="Alumnos"/>
             </StackPanel>
 
             <Border Height="1" Background="#2A2A2A" Margin="20,30,20,20"/>

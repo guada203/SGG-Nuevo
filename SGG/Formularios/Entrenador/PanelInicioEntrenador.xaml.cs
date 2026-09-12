@@ -49,9 +49,9 @@ namespace SGG.Formularios.Entrenador
 
             if (socio != null)
             {
-                var gestionRutinas = new VentanaGestionRutinas(socio.SocioId);
-                gestionRutinas.Owner = Window.GetWindow(this);
-                gestionRutinas.ShowDialog();
+                var elegir = new VentanaElegirRutina(socio.SocioId);
+                elegir.Owner = Window.GetWindow(this);
+                elegir.ShowDialog();
             }
         }
     }
