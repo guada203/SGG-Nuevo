@@ -127,9 +127,9 @@
 				<Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1"
                         CornerRadius="6" Width="185" Height="90">
 					<StackPanel VerticalAlignment="Center" Margin="16">
-						<TextBlock Text="Rutinas Pendientes" FontSize="11" Foreground="#888888"/>
-						<TextBlock x:Name="txtRutinasPendientes" Text="—" FontSize="24" FontWeight="Bold"
-                                   Foreground="#F59E0B" Margin="0,4,0,0"/>
+						<TextBlock Text="Rutinas Completadas" FontSize="11" Foreground="#888888"/>
+						<TextBlock x:Name="txtRutinasCompletadas" Text="—" FontSize="24" FontWeight="Bold"
+                                   Foreground="#3B82F6" Margin="0,4,0,0"/>
 					</StackPanel>
 				</Border>
 

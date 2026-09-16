@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using SGG.Dominio.Entidades;
 
 namespace SGG.Formularios.Entrenador
@@ -10,6 +14,10 @@ namespace SGG.Formularios.Entrenador
     public partial class VentanaGestionRutinas : Window
     {
         public ObservableCollection<EjercicioItem> Ejercicios { get; set; } = new ObservableCollection<EjercicioItem>();
+
+        private List<SocioComboItem> _sociosTodos = new List<SocioComboItem>();
+        private ICollectionView _vistaSocios;
+        private string _textoBusquedaSocio = "";
 
         private bool _modoEdicion = false;
         private int _rutinaIdEnEdicion = 0;
@@ -22,8 +30,7 @@ namespace SGG.Formularios.Entrenador
 
         public VentanaGestionRutinas(int socioIdPrecargado) : this()
         {
-            var socios = (List<SocioComboItem>)cmbSocios.ItemsSource;
-            cmbSocios.SelectedItem = socios.FirstOrDefault(s => s.Id == socioIdPrecargado);
+            SeleccionarSocio(socioIdPrecargado);
         }
 
         public VentanaGestionRutinas(RutinaListItem rutinaAEditar) : this()
@@ -35,11 +42,10 @@ namespace SGG.Formularios.Entrenador
             txtObjetivo.Text = rutinaAEditar.Objetivo;
             txtSemanas.Text = rutinaAEditar.DuracionSemanas.ToString();
 
-            var socios = (List<SocioComboItem>)cmbSocios.ItemsSource;
-            cmbSocios.SelectedItem = socios.FirstOrDefault(s => s.Id == rutinaAEditar.SocioId);
-
+            SeleccionarSocio(rutinaAEditar.SocioId);
             SeleccionarFrecuencia(rutinaAEditar.FrecuenciaSemanal);
             SeleccionarNivel(rutinaAEditar.Nivel);
+            SeleccionarEstado(rutinaAEditar.Estado);
 
             txtBreadcrumb.Text = "Mis Rutinas  >  Editar Rutina";
             txtTitulo.Text = "Editar Rutina";
@@ -47,23 +53,83 @@ namespace SGG.Formularios.Entrenador
             this.Title = "SGG - Editar Rutina";
         }
 
-        // Constructor 4: Crear una rutina NUEVA para un socio, basándose en una rutina existente como plantilla
         public VentanaGestionRutinas(RutinaListItem plantilla, int nuevoSocioId) : this()
         {
             txtNombre.Text = plantilla.Nombre;
             txtObjetivo.Text = plantilla.Objetivo;
             txtSemanas.Text = plantilla.DuracionSemanas.ToString();
 
-            var socios = (List<SocioComboItem>)cmbSocios.ItemsSource;
-            cmbSocios.SelectedItem = socios.FirstOrDefault(s => s.Id == nuevoSocioId);
-
+            SeleccionarSocio(nuevoSocioId);
             SeleccionarFrecuencia(plantilla.FrecuenciaSemanal);
             SeleccionarNivel(plantilla.Nivel);
 
-            // Ojo: _modoEdicion queda en false a propósito -- esto es una rutina NUEVA
-            // (una copia para otro socio), no una modificación de la original.
             txtBreadcrumb.Text = "Mis Alumnos  >  Nueva Rutina";
             txtTitulo.Text = $"Nueva Rutina (basada en \"{plantilla.Nombre}\")";
+        }
+
+        private void InicializarDatos()
+        {
+            Ejercicios.Add(new EjercicioItem { Nombre = "Press de Banca", GrupoMuscular = "Pecho", Series = 4, Repeticiones = 12, DescansoSegundos = 90 });
+            Ejercicios.Add(new EjercicioItem { Nombre = "Sentadilla con Barra", GrupoMuscular = "Piernas", Series = 4, Repeticiones = 10, DescansoSegundos = 120 });
+            Ejercicios.Add(new EjercicioItem { Nombre = "Peso Muerto", GrupoMuscular = "Espalda", Series = 3, Repeticiones = 8, DescansoSegundos = 90 });
+            Ejercicios.Add(new EjercicioItem { Nombre = "Dominadas", GrupoMuscular = "Espalda", Series = 3, Repeticiones = 10, DescansoSegundos = 60 });
+
+            icEjercicios.ItemsSource = Ejercicios;
+
+            _sociosTodos = new List<SocioComboItem>
+            {
+                new SocioComboItem { Id = 1, NombreCompleto = "Juan Pérez - DNI 40123456" },
+                new SocioComboItem { Id = 2, NombreCompleto = "María Gómez - DNI 38654987" },
+                new SocioComboItem { Id = 3, NombreCompleto = "Lucas Rodríguez - DNI 42987123" }
+            };
+
+            cmbSocios.ItemsSource = _sociosTodos;
+
+            // La "vista" es una capa sobre la lista que permite ocultar elementos
+            // sin sacarlos de la lista original.
+            _vistaSocios = CollectionViewSource.GetDefaultView(cmbSocios.ItemsSource);
+            _vistaSocios.Filter = FiltrarSocio;
+
+            // Escuchamos lo que se escribe dentro del propio ComboBox
+            cmbSocios.AddHandler(TextBoxBase.TextChangedEvent,
+                                 new TextChangedEventHandler(cmbSocios_TextChanged));
+        }
+
+        private bool FiltrarSocio(object item)
+        {
+            if (string.IsNullOrEmpty(_textoBusquedaSocio)) return true;
+
+            var socio = item as SocioComboItem;
+            if (socio == null) return false;
+
+            return socio.NombreCompleto.ToLower().Contains(_textoBusquedaSocio);
+        }
+
+        private void cmbSocios_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var seleccionado = cmbSocios.SelectedItem as SocioComboItem;
+
+            // Si el texto coincide exactamente con el socio ya elegido, es porque
+            // alguien lo seleccionó (o lo precargamos): limpiamos el filtro y no abrimos nada.
+            if (seleccionado != null && cmbSocios.Text == seleccionado.NombreCompleto)
+            {
+                _textoBusquedaSocio = "";
+                _vistaSocios?.Refresh();
+                return;
+            }
+
+            _textoBusquedaSocio = cmbSocios.Text?.Trim().ToLower() ?? "";
+            _vistaSocios?.Refresh();
+
+            if (!cmbSocios.IsDropDownOpen)
+            {
+                cmbSocios.IsDropDownOpen = true;
+            }
+        }
+
+        private void SeleccionarSocio(int socioId)
+        {
+            cmbSocios.SelectedItem = _sociosTodos.FirstOrDefault(s => s.Id == socioId);
         }
 
         private void SeleccionarFrecuencia(int frecuencia)
@@ -88,21 +154,14 @@ namespace SGG.Formularios.Entrenador
             }
         }
 
-        private void InicializarDatos()
+        private void SeleccionarEstado(string estado)
         {
-            Ejercicios.Add(new EjercicioItem { Nombre = "Press de Banca", GrupoMuscular = "Pecho", Series = 4, Repeticiones = 12, DescansoSegundos = 90 });
-            Ejercicios.Add(new EjercicioItem { Nombre = "Sentadilla con Barra", GrupoMuscular = "Piernas", Series = 4, Repeticiones = 10, DescansoSegundos = 120 });
-            Ejercicios.Add(new EjercicioItem { Nombre = "Peso Muerto", GrupoMuscular = "Espalda", Series = 3, Repeticiones = 8, DescansoSegundos = 90 });
-            Ejercicios.Add(new EjercicioItem { Nombre = "Dominadas", GrupoMuscular = "Espalda", Series = 3, Repeticiones = 10, DescansoSegundos = 60 });
-
-            icEjercicios.ItemsSource = Ejercicios;
-
-            cmbSocios.ItemsSource = new List<SocioComboItem>
+            switch (estado)
             {
-                new SocioComboItem { Id = 1, NombreCompleto = "Juan Pérez - DNI 40123456" },
-                new SocioComboItem { Id = 2, NombreCompleto = "María Gómez - DNI 38654987" },
-                new SocioComboItem { Id = 3, NombreCompleto = "Lucas Rodríguez - DNI 42987123" }
-            };
+                case "Activa": rbActiva.IsChecked = true; break;
+                case "Completada": rbCompletada.IsChecked = true; break;
+                default: rbActiva.IsChecked = true; break;
+            }
         }
 
         private void btnGuardarRutina_Click(object sender, RoutedEventArgs e)
@@ -113,9 +172,9 @@ namespace SGG.Formularios.Entrenador
                 return;
             }
 
-            if (cmbSocios.SelectedValue == null)
+            if (cmbSocios.SelectedItem == null)
             {
-                MessageBox.Show("Por favor, seleccioná un socio.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Por favor, seleccioná un socio de la lista.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -138,9 +197,10 @@ namespace SGG.Formularios.Entrenador
             }
 
             string nombreRutina = txtNombre.Text;
+            string estadoElegido = rbActiva.IsChecked == true ? "Activa" : "Completada";
             string mensaje = _modoEdicion
-                ? $"Rutina '{nombreRutina}' actualizada correctamente (simulado)."
-                : $"Rutina '{nombreRutina}' creada correctamente con {Ejercicios.Count} ejercicios (simulado).";
+    ? $"Rutina '{nombreRutina}' actualizada correctamente. Estado: {estadoElegido} (simulado)."
+    : $"Rutina '{nombreRutina}' creada correctamente con {Ejercicios.Count} ejercicios. Estado: {estadoElegido} (simulado).";
 
             MessageBox.Show(mensaje, "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
             this.Close();

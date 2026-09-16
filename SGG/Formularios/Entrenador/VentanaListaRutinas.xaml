@@ -42,7 +42,6 @@
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
 
-			<!-- Encabezado: título, buscador, botón crear -->
 			<DockPanel Grid.Row="0" Margin="0,0,0,15">
 				<TextBlock Text="Mis Rutinas" FontSize="26" FontWeight="Bold" Foreground="White" DockPanel.Dock="Left"/>
 				<Button x:Name="btnCrearRutina" Content="+ Crear Nueva Rutina" DockPanel.Dock="Right"
@@ -59,8 +58,6 @@
 				<Button x:Name="btnFiltroTodas" Content="Todas" Click="btnFiltro_Click" Tag="Todas"
                         Background="#A855F7" Foreground="White" BorderThickness="0" Padding="14,6" Margin="0,0,8,0"/>
 				<Button x:Name="btnFiltroActivas" Content="Activas" Click="btnFiltro_Click" Tag="Activa"
-                        Background="#1A1A1A" Foreground="#CCCCCC" BorderBrush="#333333" Padding="14,6" Margin="0,0,8,0"/>
-				<Button x:Name="btnFiltroPendientes" Content="Pendientes" Click="btnFiltro_Click" Tag="Pendiente"
                         Background="#1A1A1A" Foreground="#CCCCCC" BorderBrush="#333333" Padding="14,6" Margin="0,0,8,0"/>
 				<Button x:Name="btnFiltroCompletadas" Content="Completadas" Click="btnFiltro_Click" Tag="Completada"
                         Background="#1A1A1A" Foreground="#CCCCCC" BorderBrush="#333333" Padding="14,6"/>
