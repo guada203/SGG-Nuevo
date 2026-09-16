@@ -18,13 +18,13 @@ namespace SGG.Formularios.Entrenador
             txtRutinasCreadas.Text = "24";
             txtSociosAsignados.Text = "18";
             txtRutinasActivas.Text = "15";
-            txtRutinasPendientes.Text = "3";
+            txtRutinasCompletadas.Text = "9";
 
             dgRutinasRecientes.ItemsSource = new List<RutinaResumen>
             {
                 new RutinaResumen { Nombre = "Hipertrofia", Socio = "Mateo Rodríguez", Fecha = "21 Oct 2024", Estado = "Activa" },
                 new RutinaResumen { Nombre = "Acondicionamiento", Socio = "Valeria Espinoza", Fecha = "19 Oct 2024", Estado = "Activa" },
-                new RutinaResumen { Nombre = "Fuerza", Socio = "Ignacio Silva", Fecha = "18 Oct 2024", Estado = "Pendiente" },
+                new RutinaResumen { Nombre = "Fuerza", Socio = "Ignacio Silva", Fecha = "18 Oct 2024", Estado = "Completada" },
             };
 
             icSociosSinRutina.ItemsSource = new List<SocioPendiente>

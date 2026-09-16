@@ -23,10 +23,10 @@ namespace SGG.Formularios.Entrenador
             {
                 new RutinaListItem { Id = 1, Nombre = "Hipertrofia - Nivel Avanzado", SocioId = 1, SocioNombre = "Mateo Rodríguez", FechaCreacionTexto = "Creada el 21 Oct 2024", DuracionSemanas = 8, FrecuenciaSemanal = 4, Objetivo = "Aumentar masa muscular general", Nivel = "Avanzado", CantidadEjercicios = 12, Estado = "Activa" },
                 new RutinaListItem { Id = 2, Nombre = "Acondicionamiento General", SocioId = 2, SocioNombre = "Valeria Espinoza", FechaCreacionTexto = "Creada el 19 Oct 2024", DuracionSemanas = 6, FrecuenciaSemanal = 3, Objetivo = "Mejorar resistencia cardiovascular", Nivel = "Principiante", CantidadEjercicios = 8, Estado = "Activa" },
-                new RutinaListItem { Id = 3, Nombre = "Fuerza Funcional", SocioId = 3, SocioNombre = "Ignacio Silva", FechaCreacionTexto = "Creada el 18 Oct 2024", DuracionSemanas = 10, FrecuenciaSemanal = 4, Objetivo = "Ganar fuerza en levantamientos básicos", Nivel = "Intermedio", CantidadEjercicios = 10, Estado = "Pendiente" },
+                new RutinaListItem { Id = 3, Nombre = "Fuerza Funcional", SocioId = 3, SocioNombre = "Ignacio Silva", FechaCreacionTexto = "Creada el 18 Oct 2024", DuracionSemanas = 10, FrecuenciaSemanal = 4, Objetivo = "Ganar fuerza en levantamientos básicos", Nivel = "Intermedio", CantidadEjercicios = 10, Estado = "Activa" },
                 new RutinaListItem { Id = 4, Nombre = "Definición Muscular", SocioId = 1, SocioNombre = "Camila Peralta", FechaCreacionTexto = "Creada el 15 Oct 2024", DuracionSemanas = 4, FrecuenciaSemanal = 5, Objetivo = "Reducir grasa manteniendo masa muscular", Nivel = "Avanzado", CantidadEjercicios = 7, Estado = "Completada" },
                 new RutinaListItem { Id = 5, Nombre = "Rehabilitación Lumbar", SocioId = 2, SocioNombre = "Daniel Fuentes", FechaCreacionTexto = "Creada el 12 Oct 2024", DuracionSemanas = 12, FrecuenciaSemanal = 2, Objetivo = "Recuperar movilidad y fuerza lumbar", Nivel = "Principiante", CantidadEjercicios = 6, Estado = "Activa" },
-                new RutinaListItem { Id = 6, Nombre = "Cardio HIIT Intensivo", SocioId = 3, SocioNombre = "Sofía Martínez", FechaCreacionTexto = "Creada el 10 Oct 2024", DuracionSemanas = 6, FrecuenciaSemanal = 3, Objetivo = "Quemar grasa con entrenamiento interválico", Nivel = "Intermedio", CantidadEjercicios = 9, Estado = "Pendiente" },
+                new RutinaListItem { Id = 6, Nombre = "Cardio HIIT Intensivo", SocioId = 3, SocioNombre = "Sofía Martínez", FechaCreacionTexto = "Creada el 10 Oct 2024", DuracionSemanas = 6, FrecuenciaSemanal = 3, Objetivo = "Quemar grasa con entrenamiento interválico", Nivel = "Intermedio", CantidadEjercicios = 9, Estado = "Completada" },
             };
         }
 
@@ -62,7 +62,6 @@ namespace SGG.Formularios.Entrenador
 
             btnFiltroTodas.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#1A1A1A");
             btnFiltroActivas.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#1A1A1A");
-            btnFiltroPendientes.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#1A1A1A");
             btnFiltroCompletadas.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#1A1A1A");
 
             if (boton != null)
@@ -125,7 +124,6 @@ namespace SGG.Formularios.Entrenador
             Estado switch
             {
                 "Activa" => "#22C55E",
-                "Pendiente" => "#F59E0B",
                 "Completada" => "#3B82F6",
                 _ => "#888888"
             };
