@@ -3,7 +3,115 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SGG"
              StartupUri="Formularios/Login/VentanaSeleccionRol.xaml">
-    <Application.Resources>
-         
-    </Application.Resources>
+	<Application.Resources>
+
+		<Style x:Key="BotonMenu" TargetType="Button">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="#DDDDDD"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Left"/>
+			<Setter Property="Padding" Value="25,12"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Style.Triggers>
+				<Trigger Property="IsMouseOver" Value="True">
+					<Setter Property="Background" Value="#252525"/>
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+
+		<Style TargetType="ComboBoxItem">
+			<Setter Property="Background" Value="#1A1A1A"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Padding" Value="8,6"/>
+			<Style.Triggers>
+				<Trigger Property="IsHighlighted" Value="True">
+					<Setter Property="Background" Value="#2A2A3D"/>
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+
+		<Style x:Key="ComboBoxOscuro" TargetType="ComboBox">
+			<Setter Property="Background" Value="#0D0D0D"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="BorderBrush" Value="#333333"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="Padding" Value="8,6"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="ComboBox">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="24"/>
+							</Grid.ColumnDefinitions>
+
+							<!-- Fondo y borde de todo el control -->
+							<Border x:Name="BordeFondo" Grid.ColumnSpan="2"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4"/>
+
+							<!-- Zona clickeable que abre/cierra la lista -->
+							<ToggleButton x:Name="ToggleButton" Grid.ColumnSpan="2"
+                                          Background="Transparent"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+								<ToggleButton.Template>
+									<ControlTemplate TargetType="ToggleButton">
+										<Border Background="Transparent"/>
+									</ControlTemplate>
+								</ToggleButton.Template>
+							</ToggleButton>
+
+							<!-- Flechita -->
+							<Path Grid.Column="1" Data="M0,0 L4,4 L8,0 Z" Fill="#AAAAAA"
+                                  IsHitTestVisible="False"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+							<!-- Texto cuando NO es editable -->
+							<ContentPresenter x:Name="ContentSite" Grid.Column="0" IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="{TemplateBinding Padding}"
+                                              VerticalAlignment="Center" HorizontalAlignment="Left"/>
+
+							<!-- Caja de escritura cuando SÍ es editable -->
+							<TextBox x:Name="PART_EditableTextBox" Grid.Column="0"
+                                     Visibility="Collapsed"
+                                     Background="Transparent" BorderThickness="0"
+                                     Foreground="{TemplateBinding Foreground}"
+                                     CaretBrush="White" SelectionBrush="#A855F7"
+                                     Margin="{TemplateBinding Padding}"
+                                     VerticalContentAlignment="Center"/>
+
+							<Popup x:Name="PART_Popup" Grid.ColumnSpan="2" Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+								<Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" CornerRadius="4"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                        MaxHeight="220">
+									<ScrollViewer>
+										<ItemsPresenter/>
+									</ScrollViewer>
+								</Border>
+							</Popup>
+						</Grid>
+
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsEditable" Value="True">
+								<Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+								<Setter TargetName="ContentSite" Property="Visibility" Value="Collapsed"/>
+								<Setter TargetName="ToggleButton" Property="Grid.Column" Value="1"/>
+								<Setter TargetName="ToggleButton" Property="Grid.ColumnSpan" Value="1"/>
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+	</Application.Resources>
 </Application>
