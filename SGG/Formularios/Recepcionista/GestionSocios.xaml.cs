@@ -131,5 +131,7 @@ namespace SGG.Formularios.Recepcionista
         public string Vence { get; set; } = string.Empty;
         public string EstadoCuota { get; set; } = string.Empty;
         public string AccionBaja => Estado == "Activo" ? "DAR DE BAJA" : "REACTIVAR";
+
+        public override string ToString() => NombreCompleto;
     }
 }

@@ -63,6 +63,7 @@
         <DataGrid x:Name="dgUsuarios" Grid.Row="3">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Usuario" Binding="{Binding Nombre}" Width="200"/>
+                <DataGridTextColumn Header="DNI" Binding="{Binding Dni}" Width="110"/>
                 <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="220"/>
                 <DataGridTextColumn Header="Rol" Binding="{Binding Rol}" Width="140"/>
                 <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="100"/>

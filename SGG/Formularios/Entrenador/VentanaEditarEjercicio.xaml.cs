@@ -10,6 +10,9 @@ namespace SGG.Formularios.Entrenador
         public VentanaEditarEjercicio()
         {
             InitializeComponent();
+            Validadores.SoloNumeros(txtSeries);
+            Validadores.SoloNumeros(txtRepeticiones);
+            Validadores.SoloNumeros(txtDescanso);
         }
 
         // Constructor para editar uno existente

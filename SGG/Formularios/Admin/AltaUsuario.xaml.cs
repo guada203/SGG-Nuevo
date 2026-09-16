@@ -14,6 +14,12 @@ namespace SGG.Formularios.Admin
         public AltaUsuario()
         {
             InitializeComponent();
+
+            Validadores.SoloNumeros(txtDni);
+            Validadores.SoloNumeros(txtTelefono);
+            Validadores.SoloLetras(txtNombre);
+            Validadores.SoloLetras(txtApellido);
+
             var rolRepositorio = new RolRepositorio();
             cmbRol.ItemsSource = rolRepositorio.ObtenerTodos();
         }

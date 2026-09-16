@@ -15,6 +15,9 @@ namespace SGG.Formularios.Admin
         public AltaMembresia()
         {
             InitializeComponent();
+
+            Validadores.SoloNumeros(txtPrecio, permitirDecimal: true);
+
             txtTitulo.Text = "NUEVA MEMBRESÍA";
             btnGuardar.Content = "GUARDAR MEMBRESÍA";
             cmbActividad.SelectedIndex = 0;

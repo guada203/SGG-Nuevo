@@ -20,6 +20,9 @@ namespace SGG.Formularios.Recepcionista
         public string Email { get; set; } = string.Empty;
         public bool Activo { get; set; }
 
+        // A cargo del entrenador (id de Usuario rol Entrenador). Front/demo: en la fase BD se une por FK.
+        public int? EntrenadorId { get; set; }
+
         // Membresía embebida (en la fase BD vendría de la entidad Membresia)
         public string TipoMembresia { get; set; } = string.Empty;
         public decimal Precio { get; set; }
@@ -46,6 +49,8 @@ namespace SGG.Formularios.Recepcionista
         public string Nombre { get; set; } = string.Empty;
         public decimal Monto { get; set; }
         public string Etiqueta => $"{Nombre} — ${Monto.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))}";
+
+        public override string ToString() => Etiqueta;
     }
 
     /// <summary>Registro de asistencia (ingreso) demo.</summary>

@@ -28,6 +28,7 @@ namespace SGG.Formularios.Admin
                 {
                     Id = u.Id,
                     Nombre = string.IsNullOrWhiteSpace(u.Apellido) ? u.Nombre : $"{u.Nombre} {u.Apellido}",
+                    Dni = u.Dni ?? string.Empty,
                     Email = u.Email,
                     Rol = u.Rol?.Nombre ?? string.Empty,
                     Estado = u.Activo ? "Activo" : "Inactivo"
@@ -56,6 +57,7 @@ namespace SGG.Formularios.Admin
 
             var resultado = _todosLosUsuarios.Where(u =>
                 u.Nombre.ToLower().Contains(filtro) ||
+                u.Dni.ToLower().Contains(filtro) ||
                 u.Email.ToLower().Contains(filtro));
 
             foreach (var u in resultado)
@@ -137,13 +139,14 @@ namespace SGG.Formularios.Admin
         }
     }
 
-    public class UsuarioVista
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Rol { get; set; } = string.Empty;
-        public string Estado { get; set; } = string.Empty;
-        public bool EsActivo => Estado == "Activo";
-    }
+public class UsuarioVista
+        {
+            public int Id { get; set; }
+            public string Nombre { get; set; } = string.Empty;
+            public string Dni { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+            public string Rol { get; set; } = string.Empty;
+            public string Estado { get; set; } = string.Empty;
+            public bool EsActivo => Estado == "Activo";
+        }
 }

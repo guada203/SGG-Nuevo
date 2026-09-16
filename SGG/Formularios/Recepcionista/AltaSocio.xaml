@@ -93,6 +93,10 @@
                       Margin="0,0,0,20">
             </ComboBox>
 
+            <TextBlock Text="Entrenador (opcional)" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,5"/>
+            <ComboBox x:Name="cmbEntrenador" Style="{StaticResource ComboBoxOscuro}" Height="34"
+                      DisplayMemberPath="NombreCompleto" SelectedValuePath="Id" Margin="0,0,0,20"/>
+
             <TextBlock x:Name="txtError"
                        Foreground="#FF5555" FontSize="12"
                        TextWrapping="Wrap"
