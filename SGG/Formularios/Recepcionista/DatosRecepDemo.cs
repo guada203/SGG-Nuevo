@@ -251,12 +251,31 @@ namespace SGG.Formularios.Recepcionista
                 new AsistenciaDemo { SocioNombre = "Martín López",    FechaHora = hoy.AddHours(17).AddMinutes(30) },
                 new AsistenciaDemo { SocioNombre = "Sofía Ramírez",   FechaHora = hoy.AddHours(18).AddMinutes(20) },
                 new AsistenciaDemo { SocioNombre = "Diego Torres",    FechaHora = hoy.AddHours(19).AddMinutes(10) },
-                // Días previos
+                // Días previos: historial variado para que el reporte de asistencias
+                // muestre entre 2 y 4 visitas por socio en los últimos ~35 días.
                 new AsistenciaDemo { SocioNombre = "Ana García",      FechaHora = hoy.AddDays(-1).AddHours(18).AddMinutes(5) },
+                new AsistenciaDemo { SocioNombre = "Joaquín Silva",   FechaHora = hoy.AddDays(-1).AddHours(20).AddMinutes(15) },
+                new AsistenciaDemo { SocioNombre = "Camila Benítez",  FechaHora = hoy.AddDays(-1).AddHours(12).AddMinutes(30) },
                 new AsistenciaDemo { SocioNombre = "Lucía Fernández", FechaHora = hoy.AddDays(-2).AddHours(9).AddMinutes(40) },
                 new AsistenciaDemo { SocioNombre = "Martín López",    FechaHora = hoy.AddDays(-2).AddHours(16).AddMinutes(55) },
                 new AsistenciaDemo { SocioNombre = "Joaquín Silva",   FechaHora = hoy.AddDays(-3).AddHours(10).AddMinutes(30) },
-                new AsistenciaDemo { SocioNombre = "Sofía Ramírez",   FechaHora = hoy.AddDays(-4).AddHours(8).AddMinutes(50) }
+                new AsistenciaDemo { SocioNombre = "Carlos Pérez",    FechaHora = hoy.AddDays(-3).AddHours(19).AddMinutes(30) },
+                new AsistenciaDemo { SocioNombre = "Sofía Ramírez",   FechaHora = hoy.AddDays(-4).AddHours(8).AddMinutes(50) },
+                new AsistenciaDemo { SocioNombre = "Diego Torres",    FechaHora = hoy.AddDays(-5).AddHours(10).AddMinutes(35) },
+                new AsistenciaDemo { SocioNombre = "Camila Benítez",  FechaHora = hoy.AddDays(-6).AddHours(18).AddMinutes(40) },
+                new AsistenciaDemo { SocioNombre = "Ana García",      FechaHora = hoy.AddDays(-7).AddHours(9).AddMinutes(20) },
+                new AsistenciaDemo { SocioNombre = "Martín López",    FechaHora = hoy.AddDays(-8).AddHours(8).AddMinutes(5) },
+                new AsistenciaDemo { SocioNombre = "Lucía Fernández", FechaHora = hoy.AddDays(-9).AddHours(16).AddMinutes(25) },
+                new AsistenciaDemo { SocioNombre = "Carlos Pérez",    FechaHora = hoy.AddDays(-10).AddHours(8).AddMinutes(10) },
+                new AsistenciaDemo { SocioNombre = "Valentina Ríos",  FechaHora = hoy.AddDays(-11).AddHours(9).AddMinutes(5) },
+                new AsistenciaDemo { SocioNombre = "Sofía Ramírez",   FechaHora = hoy.AddDays(-12).AddHours(17).AddMinutes(10) },
+                new AsistenciaDemo { SocioNombre = "Diego Torres",    FechaHora = hoy.AddDays(-14).AddHours(9).AddMinutes(55) },
+                new AsistenciaDemo { SocioNombre = "Ana García",      FechaHora = hoy.AddDays(-15).AddHours(17).AddMinutes(45) },
+                new AsistenciaDemo { SocioNombre = "Joaquín Silva",   FechaHora = hoy.AddDays(-16).AddHours(8).AddMinutes(45) },
+                new AsistenciaDemo { SocioNombre = "Lucía Fernández", FechaHora = hoy.AddDays(-18).AddHours(11).AddMinutes(15) },
+                new AsistenciaDemo { SocioNombre = "Martín López",    FechaHora = hoy.AddDays(-20).AddHours(19).AddMinutes(20) },
+                new AsistenciaDemo { SocioNombre = "Valentina Ríos",  FechaHora = hoy.AddDays(-22).AddHours(18).AddMinutes(15) },
+                new AsistenciaDemo { SocioNombre = "Valentina Ríos",  FechaHora = hoy.AddDays(-30).AddHours(10).AddMinutes(40) }
             };
         }
     }

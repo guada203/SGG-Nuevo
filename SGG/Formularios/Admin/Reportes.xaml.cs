@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
 using SGG.Controles;
+using SGG.Formularios.Recepcionista;
 
 namespace SGG.Formularios.Admin
 {
@@ -19,7 +23,12 @@ namespace SGG.Formularios.Admin
         private string _reporteActual = "pagos";
         private List<ReportePagoVista> _pagosActuales = new();
         private List<ReporteAsistenciaVista> _asistenciasActuales = new();
+        private List<ReporteAsistenciaSocioVista> _asistenciasSocios = new();
+        private ReporteAsistenciaSocioVista? _asistenciaDetalle; // null = modo lista, no null = modo detalle
         private List<ReporteSocioVista> _sociosActuales = new();
+        private List<SocioDemo> _sociosDemo = DatosRecepDemo.ObtenerSocios();
+        private ListCollectionView _vistaPagosActual;
+        private string _textoBuscarPagos = string.Empty;
 
         public Reportes()
         {
@@ -64,29 +73,32 @@ namespace SGG.Formularios.Admin
         {
             // TODO: reemplazar por datos reales desde SGG.Logica
             _reporteActual = "pagos";
-            _pagosActuales = new List<ReportePagoVista>
-            {
-                new() { Socio = "Carolina Méndez", Monto = 18000, Fecha = new DateTime(2026,8,6), Metodo = "Efectivo", Actividad = "Musculación" },
-                new() { Socio = "Tomás Restrepo", Monto = 15000, Fecha = new DateTime(2026,8,8), Metodo = "Tarjeta", Actividad = "Funcional" },
-                new() { Socio = "Lucía Vargas", Monto = 22000, Fecha = new DateTime(2026,8,12), Metodo = "Transferencia", Actividad = "Combinado" },
-                new() { Socio = "Martín Aguirre", Monto = 12000, Fecha = new DateTime(2026,8,15), Metodo = "Efectivo", Actividad = "Musculación" },
-                new() { Socio = "Sofía Fernández", Monto = 30000, Fecha = new DateTime(2026,8,19), Metodo = "Tarjeta", Actividad = "Funcional" },
-                new() { Socio = "Diego Sosa", Monto = 16000, Fecha = new DateTime(2026,8,22), Metodo = "Efectivo", Actividad = "Combinado" },
-                new() { Socio = "Valentina Ríos", Monto = 35000, Fecha = new DateTime(2026,8,27), Metodo = "Transferencia", Actividad = "Funcional" },
-                new() { Socio = "Joaquín Pereyra", Monto = 14000, Fecha = new DateTime(2026,8,29), Metodo = "Tarjeta", Actividad = "Musculación" },
-                new() { Socio = "Agustina Cabral", Monto = 19000, Fecha = new DateTime(2026,9,1), Metodo = "Efectivo", Actividad = "Combinado" },
-                new() { Socio = "Nicolás Duarte", Monto = 25000, Fecha = new DateTime(2026,9,2), Metodo = "Transferencia", Actividad = "Musculación" },
-                new() { Socio = "Florencia Gómez", Monto = 17500, Fecha = new DateTime(2026,9,4), Metodo = "Tarjeta", Actividad = "Funcional" },
-                new() { Socio = "Ramiro Benítez", Monto = 13000, Fecha = new DateTime(2026,9,5), Metodo = "Efectivo", Actividad = "Combinado" },
-            };
+            _pagosActuales = DatosRecepDemo.ObtenerPagos()
+                .Select(p => new ReportePagoVista
+                {
+                    Socio = p.SocioNombre,
+                    Dni = _sociosDemo.FirstOrDefault(s => s.NombreCompleto == p.SocioNombre)?.Dni ?? string.Empty,
+                    Monto = p.Monto,
+                    Fecha = p.Fecha,
+                    Metodo = p.Metodo,
+                    Actividad = _sociosDemo.FirstOrDefault(s => s.NombreCompleto == p.SocioNombre)?.TipoMembresia ?? string.Empty
+                })
+                .ToList();
 
             dgReporte.Columns.Clear();
             dgReporte.Columns.Add(CrearColumnaTexto("Socio", "Socio"));
+            dgReporte.Columns.Add(CrearColumnaTexto("DNI", "Dni"));
             dgReporte.Columns.Add(CrearColumnaTexto("Monto", "Monto", "{0:C0}"));
             dgReporte.Columns.Add(CrearColumnaTexto("Fecha", "Fecha", "{0:dd/MM/yyyy}"));
             dgReporte.Columns.Add(CrearColumnaTexto("Método", "Metodo"));
 
-            dgReporte.ItemsSource = _pagosActuales;
+            // Vista con filtro: la grilla, el resumen, las tortas y las exportaciones
+            // reflejan automáticamente el texto escrito en el buscador.
+            _vistaPagosActual = new ListCollectionView(_pagosActuales);
+            _vistaPagosActual.Filter = FiltrarPagoActual;
+            dgReporte.ItemsSource = _vistaPagosActual;
+
+            panelFiltroSocio.Visibility = Visibility.Visible;
             txtResumen.Text = ObtenerTextoResumen();
 
             // Alimentar tortas de pagos
@@ -97,52 +109,118 @@ namespace SGG.Formularios.Admin
         {
             // TODO: reemplazar por datos reales desde SGG.Logica
             _reporteActual = "asistencias";
-            _asistenciasActuales = new List<ReporteAsistenciaVista>
-            {
-                new() { Socio = "Carolina Méndez", FechaHora = new DateTime(2026,8,21,8,42,0) },
-                new() { Socio = "Tomás Restrepo", FechaHora = new DateTime(2026,8,21,18,10,0) },
-                new() { Socio = "Lucía Vargas", FechaHora = new DateTime(2026,8,22,9,15,0) },
-                new() { Socio = "Martín Aguirre", FechaHora = new DateTime(2026,8,24,17,30,0) },
-                new() { Socio = "Sofía Fernández", FechaHora = new DateTime(2026,8,26,8,5,0) },
-                new() { Socio = "Diego Sosa", FechaHora = new DateTime(2026,8,28,19,45,0) },
-                new() { Socio = "Valentina Ríos", FechaHora = new DateTime(2026,8,29,10,20,0) },
-                new() { Socio = "Joaquín Pereyra", FechaHora = new DateTime(2026,9,1,8,55,0) },
-                new() { Socio = "Agustina Cabral", FechaHora = new DateTime(2026,9,2,18,33,0) },
-                new() { Socio = "Nicolás Duarte", FechaHora = new DateTime(2026,9,3,9,2,0) },
-                new() { Socio = "Florencia Gómez", FechaHora = new DateTime(2026,9,4,17,12,0) },
-                new() { Socio = "Ramiro Benítez", FechaHora = new DateTime(2026,9,5,8,30,0) },
-            };
+
+            // Asistencias crudas desde los datos demo (una fila por registro de ingreso).
+            _asistenciasActuales = DatosRecepDemo.ObtenerAsistencias()
+                .Select(a => new ReporteAsistenciaVista { Socio = a.SocioNombre, FechaHora = a.FechaHora })
+                .ToList();
+
+            // Vista por socio: agrupa los registros y calcula total y última visita.
+            _asistenciasSocios = _asistenciasActuales
+                .GroupBy(a => a.Socio)
+                .Select(g => new ReporteAsistenciaSocioVista
+                {
+                    Socio = g.Key,
+                    Total = g.Count(),
+                    UltimaVisita = g.Max(a => a.FechaHora)
+                })
+                .OrderByDescending(s => s.Total)
+                .ThenBy(s => s.Socio)
+                .ToList();
+
+            MostrarListadoAsistencias();
+
+            // Ocultar tortas y filtro de socio en asistencias
+            panelTortas.Visibility = Visibility.Collapsed;
+            panelFiltroSocio.Visibility = Visibility.Collapsed;
+        }
+
+        // Modo lista: una fila por socio con total de asistencias y última visita.
+        private void MostrarListadoAsistencias()
+        {
+            _asistenciaDetalle = null;
+
+            dgReporte.Columns.Clear();
+            dgReporte.Columns.Add(CrearColumnaTexto("Socio", "Socio"));
+            dgReporte.Columns.Add(CrearColumnaTexto("Total", "Total", "{0} asistencias"));
+            dgReporte.Columns.Add(CrearColumnaTexto("Última visita", "UltimaVisita", "{0:dd/MM/yyyy HH:mm}"));
+            dgReporte.Columns.Add(CrearColumnaBotonVerDetalle());
+
+            dgReporte.ItemsSource = _asistenciasSocios;
+            txtResumen.Text = ObtenerTextoResumen();
+            btnVolverAsistencias.Visibility = Visibility.Collapsed;
+        }
+
+        // Modo detalle: historial de asistencias del socio seleccionado (más reciente primero).
+        private void MostrarDetalleAsistencias(ReporteAsistenciaSocioVista socio)
+        {
+            _asistenciaDetalle = socio;
+
+            var historial = _asistenciasActuales
+                .Where(a => a.Socio == socio.Socio)
+                .OrderByDescending(a => a.FechaHora)
+                .ToList();
 
             dgReporte.Columns.Clear();
             dgReporte.Columns.Add(CrearColumnaTexto("Socio", "Socio"));
             dgReporte.Columns.Add(CrearColumnaTexto("FechaHora", "FechaHora", "{0:dd/MM/yyyy HH:mm}"));
 
-            dgReporte.ItemsSource = _asistenciasActuales;
+            dgReporte.ItemsSource = historial;
             txtResumen.Text = ObtenerTextoResumen();
+            btnVolverAsistencias.Visibility = Visibility.Visible;
+        }
 
-            // Ocultar tortas en asistencias
-            panelTortas.Visibility = Visibility.Collapsed;
+        private void BtnVerDetalleAsistencia_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is ReporteAsistenciaSocioVista socio)
+                MostrarDetalleAsistencias(socio);
+        }
+
+        private void btnVolverAsistencias_Click(object sender, RoutedEventArgs e)
+        {
+            MostrarListadoAsistencias();
+        }
+
+        // Columna de acción con el botón "Ver detalle" (creada en código como el resto).
+        private DataGridTemplateColumn CrearColumnaBotonVerDetalle()
+        {
+            var fabricaBoton = new FrameworkElementFactory(typeof(Button));
+            fabricaBoton.SetValue(Button.ContentProperty, "Ver detalle");
+            fabricaBoton.SetValue(Button.MarginProperty, new Thickness(4, 6, 4, 6));
+            fabricaBoton.SetValue(Button.PaddingProperty, new Thickness(12, 4, 12, 4));
+            fabricaBoton.SetValue(Button.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0x1A, 0x1A, 0x1A)));
+            fabricaBoton.SetValue(Button.ForegroundProperty, Brushes.White);
+            fabricaBoton.SetValue(Button.BorderBrushProperty, new SolidColorBrush(Color.FromRgb(0x33, 0x33, 0x33)));
+            fabricaBoton.SetValue(Button.CursorProperty, Cursors.Hand);
+            fabricaBoton.AddHandler(Button.ClickEvent, new RoutedEventHandler(BtnVerDetalleAsistencia_Click));
+
+            var plantilla = new DataTemplate { VisualTree = fabricaBoton };
+
+            return new DataGridTemplateColumn
+            {
+                Header = "Ver detalle",
+                CellTemplate = plantilla,
+                Width = new DataGridLength(1, DataGridLengthUnitType.Star)
+            };
         }
 
         private void MostrarReporteSocios()
         {
             // TODO: reemplazar por datos reales desde SGG.Logica
             _reporteActual = "socios";
-            _sociosActuales = new List<ReporteSocioVista>
-            {
-                new() { Nombre = "Carolina Méndez", Estado = "Activo", Membresia = "Musculación", FechaVencimiento = new DateTime(2026,9,30) },
-                new() { Nombre = "Tomás Restrepo", Estado = "Activo", Membresia = "Funcional", FechaVencimiento = new DateTime(2026,10,15) },
-                new() { Nombre = "Lucía Vargas", Estado = "Inactivo", Membresia = "Funcional", FechaVencimiento = new DateTime(2026,8,12) },
-                new() { Nombre = "Martín Aguirre", Estado = "Activo", Membresia = "Combinado", FechaVencimiento = new DateTime(2026,9,20) },
-                new() { Nombre = "Sofía Fernández", Estado = "Activo", Membresia = "Musculación", FechaVencimiento = new DateTime(2026,10,25) },
-                new() { Nombre = "Diego Sosa", Estado = "Inactivo", Membresia = "Combinado", FechaVencimiento = new DateTime(2026,8,10) },
-                new() { Nombre = "Valentina Ríos", Estado = "Activo", Membresia = "Funcional", FechaVencimiento = new DateTime(2026,10,5) },
-                new() { Nombre = "Joaquín Pereyra", Estado = "Activo", Membresia = "Musculación", FechaVencimiento = new DateTime(2026,9,1) },
-                new() { Nombre = "Agustina Cabral", Estado = "Inactivo", Membresia = "Musculación", FechaVencimiento = new DateTime(2026,8,28) },
-                new() { Nombre = "Nicolás Duarte", Estado = "Activo", Membresia = "Combinado", FechaVencimiento = new DateTime(2026,9,12) },
-                new() { Nombre = "Florencia Gómez", Estado = "Activo", Membresia = "Funcional", FechaVencimiento = new DateTime(2026,9,18) },
-                new() { Nombre = "Ramiro Benítez", Estado = "Inactivo", Membresia = "Musculación", FechaVencimiento = new DateTime(2026,9,5) },
-            };
+
+            // Socios desde los datos demo: los mismos nombres que el resto del sistema
+            // (GestionSocios, ControlAsistencia, etc.) para que el reporte sea coherente.
+            _sociosActuales = DatosRecepDemo.ObtenerSocios()
+                .Select(s => new ReporteSocioVista
+                {
+                    Nombre = s.NombreCompleto,
+                    Estado = s.Activo ? "Activo" : "Inactivo",
+                    Membresia = s.TipoMembresia,
+                    FechaVencimiento = s.FechaVencimiento
+                })
+                .OrderBy(s => s.Nombre)
+                .ToList();
 
             dgReporte.Columns.Clear();
             dgReporte.Columns.Add(CrearColumnaTexto("Nombre", "Nombre"));
@@ -153,8 +231,44 @@ namespace SGG.Formularios.Admin
             dgReporte.ItemsSource = _sociosActuales;
             txtResumen.Text = ObtenerTextoResumen();
 
+            // Ocultar filtro de socio en socios
+            panelFiltroSocio.Visibility = Visibility.Collapsed;
+
             // Alimentar torta de socios
             MostrarTortasSocios();
+        }
+
+        // ---------- Filtro por socio (pestaña PAGOS) ----------
+
+        private bool FiltrarPagoActual(object obj)
+        {
+            if (string.IsNullOrWhiteSpace(_textoBuscarPagos)) return true;
+            var p = (ReportePagoVista)obj;
+            return p.Socio.Contains(_textoBuscarPagos, StringComparison.OrdinalIgnoreCase)
+                || p.Dni.Contains(_textoBuscarPagos);
+        }
+
+        private void txtBuscarPagos_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _textoBuscarPagos = txtBuscarPagos.Text?.Trim() ?? string.Empty;
+            hintBuscarPagos.Visibility = string.IsNullOrEmpty(txtBuscarPagos.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            AplicarFiltroPagos();
+        }
+
+        private void btnLimpiarFiltro_Click(object sender, RoutedEventArgs e)
+        {
+            txtBuscarPagos.Text = string.Empty;
+            _textoBuscarPagos = string.Empty;
+            AplicarFiltroPagos();
+        }
+
+        private void AplicarFiltroPagos()
+        {
+            _vistaPagosActual?.Refresh();
+            txtResumen.Text = ObtenerTextoResumen();
+            MostrarTortasPagos();
         }
 
         // ---------- Resumen y columnas en código ----------
@@ -174,10 +288,17 @@ namespace SGG.Formularios.Admin
             switch (_reporteActual)
             {
                 case "pagos":
-                    decimal total = _pagosActuales.Sum(p => p.Monto);
-                    return $"Total recaudado: {total.ToString("C0")}";
+                    if (!string.IsNullOrWhiteSpace(_textoBuscarPagos))
+                    {
+                        decimal total = PagosVisibles.Sum(p => p.Monto);
+                        return $"Resultado: {PagosVisibles.Count} pagos · {total.ToString("C0")}";
+                    }
+                    decimal totalRecaudado = _pagosActuales.Sum(p => p.Monto);
+                    return $"Total recaudado: {totalRecaudado.ToString("C0")}";
                 case "asistencias":
-                    return $"Total de asistencias: {_asistenciasActuales.Count}";
+                    if (_asistenciaDetalle != null)
+                        return $"Historial de {_asistenciaDetalle.Socio}: {_asistenciaDetalle.Total} asistencias";
+                    return $"{_asistenciasSocios.Count} socios · {_asistenciasActuales.Count} asistencias totales";
                 case "socios":
                     int activos = _sociosActuales.Count(s => s.Estado == "Activo");
                     int inactivos = _sociosActuales.Count - activos;
@@ -187,20 +308,34 @@ namespace SGG.Formularios.Admin
             }
         }
 
+        private List<ReportePagoVista> PagosVisibles
+            => _vistaPagosActual?.Cast<ReportePagoVista>().ToList() ?? _pagosActuales;
+
         private (string[] Encabezados, List<string[]> Filas) ObtenerDatosExportar()
         {
             switch (_reporteActual)
             {
                 case "pagos":
-                    var filasPagos = _pagosActuales
-                        .Select(p => new[] { p.Socio, p.Monto.ToString("C0"), p.Fecha.ToString("dd/MM/yyyy"), p.Metodo })
+                    var filasPagos = PagosVisibles
+                        .Select(p => new[] { p.Socio, p.Dni, p.Monto.ToString("C0"), p.Fecha.ToString("dd/MM/yyyy"), p.Metodo, p.Actividad })
                         .ToList();
-                    return (new[] { "Socio", "Monto", "Fecha", "Método" }, filasPagos);
+                    return (new[] { "Socio", "DNI", "Monto", "Fecha", "Método", "Actividad" }, filasPagos);
                 case "asistencias":
-                    var filasAsistencias = _asistenciasActuales
-                        .Select(a => new[] { a.Socio, a.FechaHora.ToString("dd/MM/yyyy HH:mm") })
+                    // Modo detalle: historial del socio seleccionado.
+                    if (_asistenciaDetalle != null)
+                    {
+                        var filasHistorial = _asistenciasActuales
+                            .Where(a => a.Socio == _asistenciaDetalle.Socio)
+                            .OrderByDescending(a => a.FechaHora)
+                            .Select(a => new[] { a.Socio, a.FechaHora.ToString("dd/MM/yyyy HH:mm") })
+                            .ToList();
+                        return (new[] { "Socio", "FechaHora" }, filasHistorial);
+                    }
+                    // Modo lista: una fila por socio.
+                    var filasAsistencias = _asistenciasSocios
+                        .Select(s => new[] { s.Socio, s.Total.ToString(), s.UltimaVisita.ToString("dd/MM/yyyy HH:mm") })
                         .ToList();
-                    return (new[] { "Socio", "FechaHora" }, filasAsistencias);
+                    return (new[] { "Socio", "Total", "Última visita" }, filasAsistencias);
                 case "socios":
                     var filasSocios = _sociosActuales
                         .Select(s => new[]
@@ -234,7 +369,7 @@ namespace SGG.Formularios.Admin
             };
 
             tortaActividad.SetDatos(
-                _pagosActuales
+                PagosVisibles
                     .GroupBy(p => p.Actividad)
                     .Select(g => new GraficoTortaItem
                     {
@@ -255,7 +390,7 @@ namespace SGG.Formularios.Admin
             };
 
             tortaMetodo.SetDatos(
-                _pagosActuales
+                PagosVisibles
                     .GroupBy(p => p.Metodo)
                     .Select(g => new GraficoTortaItem
                     {
@@ -346,12 +481,18 @@ namespace SGG.Formularios.Admin
 
         private FlowDocument ConstruirFlowDocument()
         {
-            string titulo = _reporteActual switch
-            {
-                "pagos" => "Reporte de Pagos",
-                "asistencias" => "Reporte de Asistencias",
-                _ => "Reporte de Socios"
-            };
+            string titulo;
+            if (_reporteActual == "pagos" && !string.IsNullOrWhiteSpace(_textoBuscarPagos))
+                titulo = $"Reporte de Pagos — filtrado por \"{_textoBuscarPagos}\"";
+            else if (_reporteActual == "asistencias" && _asistenciaDetalle != null)
+                titulo = $"Reporte de Asistencias — Historial de {_asistenciaDetalle.Socio}";
+            else
+                titulo = _reporteActual switch
+                {
+                    "pagos" => "Reporte de Pagos",
+                    "asistencias" => "Reporte de Asistencias",
+                    _ => "Reporte de Socios"
+                };
 
             var documento = new FlowDocument
             {
@@ -407,6 +548,7 @@ namespace SGG.Formularios.Admin
     public class ReportePagoVista
     {
         public string Socio { get; set; } = string.Empty;
+        public string Dni { get; set; } = string.Empty;
         public decimal Monto { get; set; }
         public DateTime Fecha { get; set; }
         public string Metodo { get; set; } = string.Empty;
@@ -417,6 +559,13 @@ namespace SGG.Formularios.Admin
     {
         public string Socio { get; set; } = string.Empty;
         public DateTime FechaHora { get; set; }
+    }
+
+    public class ReporteAsistenciaSocioVista
+    {
+        public string Socio { get; set; } = string.Empty;
+        public int Total { get; set; }
+        public DateTime UltimaVisita { get; set; }
     }
 
     public class ReporteSocioVista
