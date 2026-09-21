@@ -23,10 +23,14 @@
 
         <!-- Buscador -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
-            <TextBox x:Name="txtBuscar" Width="380" Height="36" 
-                     Style="{StaticResource TextBoxConPlaceholder}"
-                     Tag="Buscar por nombre o DNI..."
-                     TextChanged="txtBuscar_TextChanged"/>
+            <Grid Width="380" Height="36">
+                <TextBox x:Name="txtBuscar"
+                         Style="{StaticResource TextBoxConPlaceholder}"
+                         TextChanged="txtBuscar_TextChanged"/>
+                <TextBlock x:Name="hintBuscar" Text="Buscar por nombre o DNI..."
+                           Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
+                           IsHitTestVisible="False"/>
+            </Grid>
         </StackPanel>
 
         <!-- Tabla de socios -->

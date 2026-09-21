@@ -24,10 +24,16 @@
             <StackPanel>
 
                 <TextBlock Text="Socio" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
-                <ComboBox x:Name="cmbSocio" Style="{StaticResource ComboBoxOscuro}" Height="34" 
-                          Margin="0,0,0,10" DisplayMemberPath="NombreCompleto"
-                          IsEditable="True" IsTextSearchEnabled="False"
-                          SelectionChanged="cmbSocio_SelectionChanged"/>
+                <Grid Margin="0,0,0,10">
+                    <TextBox x:Name="txtBuscarSocio" Style="{StaticResource TextBoxConPlaceholder}"
+                             VerticalContentAlignment="Center"
+                             TextChanged="txtBuscarSocio_TextChanged"/>
+                    <TextBlock x:Name="hintBuscarSocio" Text="Buscar por nombre o DNI..."
+                               Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
+                               IsHitTestVisible="False"/>
+                </Grid>
+                <TextBlock x:Name="txtEstadoSocio" FontSize="12" TextWrapping="Wrap"
+                           Visibility="Collapsed" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Precio (membresía)" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
                 <ComboBox x:Name="cmbMonto" Style="{StaticResource ComboBoxOscuro}" Height="34"
@@ -74,9 +80,14 @@
                     <TextBlock Grid.Column="0" Text="🧾 Pagos recientes" FontSize="14" FontWeight="SemiBold" 
                                Foreground="White" VerticalAlignment="Center"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <TextBox x:Name="txtBuscarPago" Width="240" Height="30"
-                                 Style="{StaticResource TextBoxConPlaceholder}" Tag="Buscar por nombre o DNI..."
-                                 TextChanged="txtBuscarPago_TextChanged"/>
+                        <Grid Width="240" Height="30">
+                            <TextBox x:Name="txtBuscarPago"
+                                     Style="{StaticResource TextBoxConPlaceholder}"
+                                     TextChanged="txtBuscarPago_TextChanged"/>
+                            <TextBlock x:Name="hintBuscarPago" Text="Buscar por nombre o DNI..."
+                                       Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
+                                       IsHitTestVisible="False"/>
+                        </Grid>
                         <DatePicker x:Name="dpFiltroFecha" Width="140" Margin="8,0,0,0" VerticalAlignment="Center"
                                     SelectedDateChanged="dpFiltroFecha_SelectedDateChanged"/>
                         <Button x:Name="btnLimpiarFiltros" Content="✕ Limpiar" Height="30" Padding="12,0" Margin="8,0,0,0"

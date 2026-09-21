@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace SGG.Formularios.Recepcionista
 {
@@ -15,38 +16,29 @@ namespace SGG.Formularios.Recepcionista
         private readonly List<SocioDemo> _sociosDemo = DatosRecepDemo.ObtenerSocios();
         private List<SocioVista> _todosLosSocios = new();
         private List<PagoVista> _todosLosPagos = new();
-        private bool _restaurandoSocios;
 
-        public ObservableCollection<SocioVista> Socios { get; set; } = new();
         public ObservableCollection<PagoVista> Pagos { get; set; } = new();
 
         public RegistrarPago()
         {
             InitializeComponent();
-            // ComboBox no expone TextChanged en XAML; el TextBox editable interno lo
-            // dispara como evento enrutado que burbujea hasta el ComboBox.
-            cmbSocio.AddHandler(TextBox.TextChangedEvent, new TextChangedEventHandler(cmbSocio_TextChanged));
             CargarSocios();
             CargarPagos();
-            cmbSocio.ItemsSource = Socios;
             cmbMonto.ItemsSource = DatosRecepDemo.ObtenerPreciosMembresias();
             dgPagos.ItemsSource = Pagos;
         }
 
         private void CargarSocios()
         {
+            // TODO integración BD: esto se reemplaza por el repositorio real (SGG.Datos).
             _todosLosSocios = _sociosDemo
                 .Select(s => new SocioVista
                 {
                     Id = s.Id,
-                    NombreCompleto = $"{s.Nombre} {s.Apellido} — DNI {s.Dni}".Trim(),
+                    NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
                     Dni = s.Dni
                 })
                 .ToList();
-
-            Socios.Clear();
-            foreach (var socio in _todosLosSocios)
-                Socios.Add(socio);
         }
 
         private void CargarPagos()
@@ -67,34 +59,48 @@ namespace SGG.Formularios.Recepcionista
             Pagos = new ObservableCollection<PagoVista>(_todosLosPagos);
         }
 
-        private void RestaurarListaSocios()
+        // Búsqueda sin desplegable, mismo patrón que el buscador de Admin (Reportes/GestionSocios):
+        // filtra por nombre o DNI y resuelve el socio recién cuando hay UNA única coincidencia.
+        private List<SocioVista> BuscarCandidatos(string texto)
         {
-            if (!ReferenceEquals(cmbSocio.ItemsSource, Socios))
-                cmbSocio.ItemsSource = Socios;
-        }
+            if (string.IsNullOrWhiteSpace(texto)) return new List<SocioVista>();
 
-        private void cmbSocio_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (_restaurandoSocios) return;
-            if (cmbSocio.SelectedItem is SocioVista sel && sel.NombreCompleto == cmbSocio.Text) return;
-
-            string texto = cmbSocio.Text;
-            var filtrados = _todosLosSocios
-                .Where(s => s.NombreCompleto.IndexOf(texto, StringComparison.OrdinalIgnoreCase) >= 0)
+            string criterio = texto.Trim();
+            return _todosLosSocios
+                .Where(s => s.NombreCompleto.Contains(criterio, StringComparison.OrdinalIgnoreCase)
+                         || s.Dni.Contains(criterio, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-
-            cmbSocio.ItemsSource = filtrados;
-            cmbSocio.IsDropDownOpen = filtrados.Count > 0 && texto.Length > 0;
         }
 
-        private void cmbSocio_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void txtBuscarSocio_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (cmbSocio.SelectedItem is SocioVista)
+            hintBuscarSocio.Visibility = string.IsNullOrEmpty(txtBuscarSocio.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            var candidatos = BuscarCandidatos(txtBuscarSocio.Text);
+
+            if (candidatos.Count == 0)
             {
-                _restaurandoSocios = true;
-                RestaurarListaSocios();
-                _restaurandoSocios = false;
+                bool vacio = string.IsNullOrWhiteSpace(txtBuscarSocio.Text);
+                txtEstadoSocio.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x55, 0x55));
+                txtEstadoSocio.Text = vacio ? string.Empty : "No se encontró ningún socio.";
+                txtEstadoSocio.Visibility = vacio ? Visibility.Collapsed : Visibility.Visible;
+                return;
             }
+
+            if (candidatos.Count == 1)
+            {
+                var socio = candidatos[0];
+                txtEstadoSocio.Foreground = new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B));
+                txtEstadoSocio.Text = $"✔ Socio: {socio.NombreCompleto} · DNI {socio.Dni}";
+                txtEstadoSocio.Visibility = Visibility.Visible;
+                return;
+            }
+
+            txtEstadoSocio.Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+            txtEstadoSocio.Text = $"{candidatos.Count} coincidencias — seguí escribiendo";
+            txtEstadoSocio.Visibility = Visibility.Visible;
         }
 
         private void AplicarFiltros()
@@ -116,7 +122,14 @@ namespace SGG.Formularios.Recepcionista
                 Pagos.Add(pago);
         }
 
-        private void txtBuscarPago_TextChanged(object sender, TextChangedEventArgs e) => AplicarFiltros();
+        private void txtBuscarPago_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            AplicarFiltros();
+
+            hintBuscarPago.Visibility = string.IsNullOrEmpty(txtBuscarPago.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
 
         private void dpFiltroFecha_SelectedDateChanged(object sender, SelectionChangedEventArgs e) => AplicarFiltros();
 
@@ -131,11 +144,15 @@ namespace SGG.Formularios.Recepcionista
         {
             OcultarAvisos();
 
-            if (cmbSocio.SelectedItem is not SocioVista socio)
+            // Re-resuelve el socio desde el texto del buscador (nombre o DNI): si no hay
+            // exactamente una coincidencia, se mantiene el mismo aviso de siempre.
+            var candidatos = BuscarCandidatos(txtBuscarSocio.Text);
+            if (candidatos.Count != 1)
             {
                 MostrarError("Debe seleccionar un socio.");
                 return;
             }
+            var socio = candidatos[0];
 
             if (cmbMonto.SelectedItem is not PrecioMembresiaDemo precio)
             {
@@ -164,9 +181,7 @@ namespace SGG.Formularios.Recepcionista
             _todosLosPagos.Insert(0, nuevo);
             AplicarFiltros();
 
-            cmbSocio.SelectedItem = null;
-            cmbSocio.Text = "";
-            RestaurarListaSocios();
+            txtBuscarSocio.Clear();
             cmbMonto.SelectedIndex = -1;
             cmbMetodoPago.SelectedIndex = -1;
 

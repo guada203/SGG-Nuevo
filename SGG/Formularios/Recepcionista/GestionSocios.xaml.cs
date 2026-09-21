@@ -69,6 +69,10 @@ namespace SGG.Formularios.Recepcionista
         private void txtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
             AplicarFiltro();
+
+            hintBuscar.Visibility = string.IsNullOrEmpty(txtBuscar.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void btnNuevoSocio_Click(object sender, RoutedEventArgs e)

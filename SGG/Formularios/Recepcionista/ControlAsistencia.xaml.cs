@@ -18,10 +18,105 @@ namespace SGG.Formularios.Recepcionista
             InitializeComponent();
             CargarSocios();
             CargarAsistenciasDeHoy();
-            cmbSocio.ItemsSource = Socios;
-            cmbSocioHistorial.ItemsSource = Socios;
             dgAsistenciasHoy.ItemsSource = AsistenciasHoy;
             dgHistorialSocio.ItemsSource = HistorialSocio;
+        }
+
+        // Búsqueda sin desplegable, mismo patrón que el buscador de Admin (Reportes/GestionSocios):
+        // filtra por nombre o DNI y resuelve el socio recién cuando hay UNA única coincidencia.
+        private List<SocioVista> BuscarCandidatos(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return new List<SocioVista>();
+
+            string criterio = texto.Trim();
+            return Socios
+                .Where(s => s.NombreCompleto.Contains(criterio, StringComparison.OrdinalIgnoreCase)
+                         || s.Dni.Contains(criterio, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        private void txtBuscarSocio_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            hintBuscarSocio.Visibility = string.IsNullOrEmpty(txtBuscarSocio.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            var candidatos = BuscarCandidatos(txtBuscarSocio.Text);
+
+            if (candidatos.Count == 0)
+            {
+                bool vacio = string.IsNullOrWhiteSpace(txtBuscarSocio.Text);
+                txtEstadoSocioIngreso.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x55, 0x55));
+                txtEstadoSocioIngreso.Text = vacio ? string.Empty : "No se encontró ningún socio.";
+                txtEstadoSocioIngreso.Visibility = vacio ? Visibility.Collapsed : Visibility.Visible;
+                return;
+            }
+
+            if (candidatos.Count == 1)
+            {
+                var socio = candidatos[0];
+                txtEstadoSocioIngreso.Foreground = new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B));
+                txtEstadoSocioIngreso.Text = $"✔ Socio: {socio.NombreCompleto} · DNI {socio.Dni}";
+                txtEstadoSocioIngreso.Visibility = Visibility.Visible;
+                return;
+            }
+
+            txtEstadoSocioIngreso.Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+            txtEstadoSocioIngreso.Text = $"{candidatos.Count} coincidencias — seguí escribiendo";
+            txtEstadoSocioIngreso.Visibility = Visibility.Visible;
+        }
+
+        private void txtBuscarSocioHistorial_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            hintBuscarSocioHistorial.Visibility = string.IsNullOrEmpty(txtBuscarSocioHistorial.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            ActualizarHistorial();
+        }
+
+        // RF-10: historial de asistencias del socio resuelto por el buscador
+        private void ActualizarHistorial()
+        {
+            HistorialSocio.Clear();
+            txtSinHistorial.Visibility = Visibility.Collapsed;
+
+            var candidatos = BuscarCandidatos(txtBuscarSocioHistorial.Text);
+
+            if (candidatos.Count == 0)
+            {
+                if (!string.IsNullOrWhiteSpace(txtBuscarSocioHistorial.Text))
+                {
+                    txtSinHistorial.Text = "No se encontró ningún socio.";
+                    txtSinHistorial.Visibility = Visibility.Visible;
+                }
+                return;
+            }
+
+            if (candidatos.Count > 1)
+            {
+                txtSinHistorial.Text = $"{candidatos.Count} coincidencias — seguí escribiendo";
+                txtSinHistorial.Visibility = Visibility.Visible;
+                return;
+            }
+
+            var socio = candidatos[0];
+            var registros = DatosRecepDemo.ObtenerAsistencias()
+                .Where(a => a.SocioNombre == socio.NombreCompleto)
+                .OrderByDescending(a => a.FechaHora)
+                .Select(a => new AsistenciaHistorialVista
+                {
+                    Fecha = a.FechaHora.ToString("dd/MM/yyyy"),
+                    Hora = a.FechaHora.ToString("HH:mm")
+                });
+
+            foreach (var r in registros)
+                HistorialSocio.Add(r);
+
+            if (HistorialSocio.Count == 0)
+            {
+                txtSinHistorial.Text = $"Sin asistencias registradas para {socio.NombreCompleto}.";
+                txtSinHistorial.Visibility = Visibility.Visible;
+            }
         }
 
         private void CargarSocios()
@@ -32,6 +127,7 @@ namespace SGG.Formularios.Recepcionista
                 {
                     Id = s.Id,
                     NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
+                    Dni = s.Dni,
                     EstadoCuota = DatosRecepDemo.EstadoCuota(s)
                 });
             }
@@ -57,11 +153,14 @@ namespace SGG.Formularios.Recepcionista
         {
             OcultarMensaje();
 
-            if (cmbSocio.SelectedItem is not SocioVista socio)
+            // Re-resuelve el socio desde el texto del buscador (nombre o DNI).
+            var candidatos = BuscarCandidatos(txtBuscarSocio.Text);
+            if (candidatos.Count != 1)
             {
                 MostrarMensaje("Debe seleccionar un socio.", esError: true);
                 return;
             }
+            var socio = candidatos[0];
 
             var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.Id == socio.Id);
             if (demo == null)
@@ -88,35 +187,7 @@ namespace SGG.Formularios.Recepcionista
             });
 
             MostrarMensaje($"✔ Ingreso registrado correctamente para {socio.NombreCompleto}.", esError: false);
-            cmbSocio.SelectedIndex = -1;
-        }
-
-        // RF-10: historial de asistencias del socio seleccionado
-        private void cmbSocioHistorial_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            HistorialSocio.Clear();
-            txtSinHistorial.Visibility = Visibility.Collapsed;
-
-            if (cmbSocioHistorial.SelectedItem is not SocioVista socio)
-                return;
-
-            var registros = DatosRecepDemo.ObtenerAsistencias()
-                .Where(a => a.SocioNombre == socio.NombreCompleto)
-                .OrderByDescending(a => a.FechaHora)
-                .Select(a => new AsistenciaHistorialVista
-                {
-                    Fecha = a.FechaHora.ToString("dd/MM/yyyy"),
-                    Hora = a.FechaHora.ToString("HH:mm")
-                });
-
-            foreach (var r in registros)
-                HistorialSocio.Add(r);
-
-            if (HistorialSocio.Count == 0)
-            {
-                txtSinHistorial.Text = $"Sin asistencias registradas para {socio.NombreCompleto}.";
-                txtSinHistorial.Visibility = Visibility.Visible;
-            }
+            txtBuscarSocio.Clear();
         }
 
         private static string EstadoCuotaDe(string nombreCompleto)
