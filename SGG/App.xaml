@@ -67,7 +67,11 @@ StartupUri="Formularios/Login/VentanaSeleccionRol.xaml">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <ToggleButton x:Name="ToggleButton"
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="24"/>
+                            </Grid.ColumnDefinitions>
+                            <ToggleButton x:Name="ToggleButton" Grid.ColumnSpan="2"
                                           IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                                           ClickMode="Press">
                                 <ToggleButton.Template>
@@ -88,28 +92,32 @@ StartupUri="Formularios/Login/VentanaSeleccionRol.xaml">
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ContentPresenter x:Name="ContentSite" IsHitTestVisible="False"
+                            <!-- Caja de edición (ComboBox con IsEditable=True, búsqueda por tipeo) y
+                                 selección: viven en la MISMA columna del Grid (superpuestos a propósito)
+                                 y el trigger de IsEditable alterna su Visibility. La columna de la
+                                 derecha queda libre para que el clic llegue al ToggleButton. -->
+                            <ContentPresenter x:Name="ContentSite" Grid.Column="0" IsHitTestVisible="False"
                                               Content="{TemplateBinding SelectionBoxItem}"
                                               ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                               Margin="{TemplateBinding Padding}"
                                               VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                            <!-- Caja de edición para ComboBox con IsEditable=True (búsqueda por tipeo).
-                                 Solo se muestra en ese modo; la columna de la derecha queda libre
-                                 para que el clic llegue al ToggleButton y abra el dropdown. -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="24"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" x:Name="PART_EditableTextBox"
-                                         IsReadOnly="{TemplateBinding IsReadOnly}"
-                                         Background="Transparent" Foreground="White"
-                                         BorderThickness="0" CaretBrush="White"
-                                         Margin="{TemplateBinding Padding}"
-                                         VerticalAlignment="Center" HorizontalAlignment="Stretch"
-                                         Visibility="Hidden"/>
-                            </Grid>
-                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                            <TextBox Grid.Column="0" x:Name="PART_EditableTextBox"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}"
+                                     Background="Transparent" Foreground="White"
+                                     BorderThickness="0" CaretBrush="White"
+                                     Margin="{TemplateBinding Padding}"
+                                     VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                     Visibility="Hidden">
+                                <!-- Template propio: evita que el tema del sistema pinte fondo/borde
+                                     de foco sobre el nombre seleccionado (rectángulo negro al escribir). -->
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <ScrollViewer x:Name="PART_ContentHost" Background="Transparent"
+                                                      VerticalAlignment="Center"/>
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+                            <Popup x:Name="Popup" Grid.ColumnSpan="2" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
                                    AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                                 <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" CornerRadius="4"
                                         MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ComboBox}}"
@@ -231,47 +239,16 @@ StartupUri="Formularios/Login/VentanaSeleccionRol.xaml">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
-        <!-- ESTILO SOLO PARA BUSCADORES: template con esquinas redondeadas + placeholder.
-             No es global por una razón crítica: el DatePicker usa un DatePickerTextBox interno
-             que hereda de TextBox; si el estilo global llevara un Template propio, el DatePickerTextBox
-             dejaría de dibujar la fecha seleccionada (necesita su template nativo con PART_Watermark). -->
+        <!-- ESTILO PARA BUSCADORES: TextBox plano oscuro, IDÉNTICO al buscador de Entrenador
+             (VentanaListaRutinas.xaml). SIN template propio: usa el template NATIVO, que pinta
+             el texto siempre y dispara TextChanged normalmente.
+             NO volver a ponerle template custom a este estilo. En .NET 10 con tema oscuro:
+               - ScrollViewer PART_ContentHost  -> texto invisible (lo que pasaba antes).
+               - TextBox interno + TemplateBinding -> lo que escribís no sale al TextBox externo,
+                 TextChanged no dispara el filtro y el Hint queda encima (lo que pasó después).
+             El DatePicker NO usa este estilo (mantiene su template propio con PART_Watermark). -->
         <Style x:Key="TextBoxConPlaceholder" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Grid>
-                            <Border x:Name="Borde"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="4">
-                                <ScrollViewer x:Name="PART_ContentHost"
-                                              Margin="{TemplateBinding Padding}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                            </Border>
-                            <TextBlock x:Name="Hint"
-                                       Text="{TemplateBinding Tag}"
-                                       Foreground="#666666"
-                                       FontStyle="Italic"
-                                       Margin="{TemplateBinding Padding}"
-                                       VerticalAlignment="Center"
-                                       IsHitTestVisible="False"
-                                       Visibility="Collapsed"/>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter TargetName="Hint" Property="Visibility" Value="Visible"/>
-                            </Trigger>
-                            <Trigger Property="Tag" Value="{x:Null}">
-                                <Setter TargetName="Hint" Property="Visibility" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Borde" Property="BorderBrush" Value="#C5FF00"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Padding" Value="8"/>
         </Style>
 
         <!-- Estilo implícito para el DatePickerTextBox interno del DatePicker.
