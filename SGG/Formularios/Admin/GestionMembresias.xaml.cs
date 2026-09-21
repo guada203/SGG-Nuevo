@@ -57,6 +57,10 @@ namespace SGG.Formularios.Admin
 
             foreach (var m in resultado)
                 Membresias.Add(m);
+
+            hintBuscar.Visibility = string.IsNullOrEmpty(txtBuscar.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void btnNuevaMembresia_Click(object sender, RoutedEventArgs e)

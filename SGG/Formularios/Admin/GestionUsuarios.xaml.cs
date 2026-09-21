@@ -57,11 +57,15 @@ namespace SGG.Formularios.Admin
 
             var resultado = _todosLosUsuarios.Where(u =>
                 u.Nombre.ToLower().Contains(filtro) ||
-                u.Dni.ToLower().Contains(filtro) ||
+                (u.Dni?.ToLower().Contains(filtro) == true) ||
                 u.Email.ToLower().Contains(filtro));
 
             foreach (var u in resultado)
                 Usuarios.Add(u);
+
+            hintBuscar.Visibility = string.IsNullOrEmpty(txtBuscar.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void btnNuevoUsuario_Click(object sender, RoutedEventArgs e)
@@ -74,7 +78,8 @@ namespace SGG.Formularios.Admin
         private void btnEditar_Click(object sender, RoutedEventArgs e)
         {
             var boton = (System.Windows.Controls.Button)sender;
-            var ventanaEdicion = new AltaUsuario((int)boton.Tag);
+            if (boton.Tag is not int idUsuario) return;
+            var ventanaEdicion = new AltaUsuario(idUsuario);
             ventanaEdicion.ShowDialog(); // se abre como modal, espera a que se cierre
             CargarUsuarios(); // al volver, recargamos la lista por si se modificaron datos
         }
@@ -82,7 +87,7 @@ namespace SGG.Formularios.Admin
         private void ToggleActivo_Click(object sender, RoutedEventArgs e)
         {
             var toggle = (System.Windows.Controls.Primitives.ToggleButton)sender;
-            int id = (int)toggle.Tag;
+            if (toggle.Tag is not int id) return;
 
             var usuario = _todosLosUsuarios.FirstOrDefault(u => u.Id == id);
             if (usuario == null) return;

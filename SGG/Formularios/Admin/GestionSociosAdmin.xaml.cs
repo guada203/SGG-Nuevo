@@ -58,6 +58,10 @@ namespace SGG.Formularios.Admin
 
             foreach (var s in resultado)
                 Socios.Add(s);
+
+            hintBuscar.Visibility = string.IsNullOrEmpty(txtBuscar.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void btnBaja_Click(object sender, RoutedEventArgs e)
