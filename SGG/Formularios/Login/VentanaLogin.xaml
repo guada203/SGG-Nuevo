@@ -23,10 +23,25 @@
                  VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
         <TextBlock Text="Contraseña" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,5"/>
-        <PasswordBox x:Name="txtPassword" Height="34" 
-                     Background="#1A1A1A" Foreground="White" 
-                     BorderBrush="#333333" Padding="8,0" 
-                     VerticalContentAlignment="Center" Margin="0,0,0,10"/>
+        <!-- Overlay contraseña: PasswordBox (oculto) + TextBox (claro), alternados por el botón ojo.
+             Ambos se mantienen sincronizados para que btnIngresar siempre lea txtPassword.Password. -->
+        <Grid Height="34" Margin="0,0,0,10">
+            <PasswordBox x:Name="txtPassword" Height="34"
+                         Background="#1A1A1A" Foreground="White"
+                         BorderBrush="#333333" Padding="8,0,36,0"
+                         VerticalContentAlignment="Center"/>
+            <TextBox x:Name="txtPasswordVisible" Height="34"
+                     Background="#1A1A1A" Foreground="White"
+                     BorderBrush="#333333" Padding="8,0,36,0"
+                     VerticalContentAlignment="Center"
+                     TextChanged="txtPasswordVisible_TextChanged"
+                     Visibility="Collapsed"/>
+            <Button x:Name="btnVerPassword" Click="btnVerPassword_Click"
+                    Width="36" Height="34" HorizontalAlignment="Right"
+                    Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#666666"
+                    Content="&#xE7B3;" ToolTip="Ver contraseña"/>
+        </Grid>
 
         <TextBlock x:Name="txtError" 
                    Foreground="#FF5555" FontSize="12"

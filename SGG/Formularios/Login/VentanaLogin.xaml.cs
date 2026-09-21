@@ -18,6 +18,38 @@ namespace SGG.Formularios.Login
             txtRolSeleccionado.Text = $"Ingresando como {_rolSeleccionado}";
         }
 
+        private void btnVerPassword_Click(object sender, RoutedEventArgs e)
+        {
+            bool mostrandoClaro = txtPasswordVisible.Visibility == Visibility.Visible;
+
+            if (!mostrandoClaro)
+            {
+                // Pasar lo tipeado al TextBox y mostrar en claro.
+                txtPasswordVisible.Text = txtPassword.Password;
+                txtPassword.Visibility = Visibility.Collapsed;
+                txtPasswordVisible.Visibility = Visibility.Visible;
+                txtPasswordVisible.Focus();
+                txtPasswordVisible.CaretIndex = txtPasswordVisible.Text.Length;
+                btnVerPassword.ToolTip = "Ocultar contraseña";
+            }
+            else
+            {
+                // Devolver el texto al PasswordBox y ocultar.
+                txtPassword.Password = txtPasswordVisible.Text;
+                txtPasswordVisible.Visibility = Visibility.Collapsed;
+                txtPassword.Visibility = Visibility.Visible;
+                txtPassword.Focus();
+                btnVerPassword.ToolTip = "Ver contraseña";
+            }
+        }
+
+        private void txtPasswordVisible_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            // Mantener sincronizado el PasswordBox oculto mientras se escribe en claro,
+            // para que btnIngresar siempre lea el valor correcto desde txtPassword.Password.
+            txtPassword.Password = txtPasswordVisible.Text;
+        }
+
         private void btnIngresar_Click(object sender, RoutedEventArgs e)
         {
             string email = txtEmail.Text.Trim();
