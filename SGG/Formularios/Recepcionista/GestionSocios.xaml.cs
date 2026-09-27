@@ -136,6 +136,9 @@ namespace SGG.Formularios.Recepcionista
         public string EstadoCuota { get; set; } = string.Empty;
         public string AccionBaja => Estado == "Activo" ? "DAR DE BAJA" : "REACTIVAR";
 
+        // Mismo formato que el combo del Entrenador: "Juan Pérez - DNI 40123456"
+        public string NombreConDni => $"{NombreCompleto} - DNI {Dni}";
+
         public override string ToString() => NombreCompleto;
     }
 }

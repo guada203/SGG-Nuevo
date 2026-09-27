@@ -31,16 +31,10 @@
                     <TextBlock Text="Registrar ingreso" FontSize="14" FontWeight="SemiBold" 
                                Foreground="White" Margin="0,0,0,12"/>
                     <TextBlock Text="Socio" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
-                    <Grid Margin="0,0,0,8">
-                        <TextBox x:Name="txtBuscarSocio" Style="{StaticResource TextBoxConPlaceholder}"
-                                 VerticalContentAlignment="Center"
-                                 TextChanged="txtBuscarSocio_TextChanged"/>
-                        <TextBlock x:Name="hintBuscarSocio" Text="Buscar por nombre o DNI..."
-                                   Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
-                                   IsHitTestVisible="False"/>
-                    </Grid>
-                    <TextBlock x:Name="txtEstadoSocioIngreso" FontSize="12" TextWrapping="Wrap"
-                               Visibility="Collapsed" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="cmbSocioIngreso" Style="{StaticResource ComboBoxOscuro}"
+                              IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                              DisplayMemberPath="NombreConDni" SelectedValuePath="Id"
+                              Margin="0,0,0,14"/>
                     <Button x:Name="btnRegistrarIngreso" Content="✅ REGISTRAR INGRESO" Height="38" 
                             Background="#3B82F6" Foreground="White" FontWeight="Bold"
                             BorderThickness="0" Cursor="Hand" Margin="0,0,0,10"
@@ -83,14 +77,10 @@
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
                     <TextBlock Text="Socio:" Foreground="#AAAAAA" FontSize="12" 
                                VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <Grid Width="300">
-                        <TextBox x:Name="txtBuscarSocioHistorial" Style="{StaticResource TextBoxConPlaceholder}"
-                                 VerticalContentAlignment="Center"
-                                 TextChanged="txtBuscarSocioHistorial_TextChanged"/>
-                        <TextBlock x:Name="hintBuscarSocioHistorial" Text="Buscar por nombre o DNI..."
-                                   Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
-                                   IsHitTestVisible="False"/>
-                    </Grid>
+                    <ComboBox x:Name="cmbSocioHistorial" Style="{StaticResource ComboBoxOscuro}"
+                              IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                              DisplayMemberPath="NombreConDni" SelectedValuePath="Id"
+                              Width="300" Margin="0,0,0,14"/>
                 </StackPanel>
                 <DataGrid Grid.Row="2" x:Name="dgHistorialSocio" Height="140">
                     <DataGrid.Columns>

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 
 namespace SGG.Formularios.Recepcionista
 {
@@ -16,6 +18,8 @@ namespace SGG.Formularios.Recepcionista
         private readonly List<SocioDemo> _sociosDemo = DatosRecepDemo.ObtenerSocios();
         private List<SocioVista> _todosLosSocios = new();
         private List<PagoVista> _todosLosPagos = new();
+        private ICollectionView _vistaSocios;
+        private string _textoBusquedaSocio = "";
 
         public ObservableCollection<PagoVista> Pagos { get; set; } = new();
 
@@ -39,6 +43,17 @@ namespace SGG.Formularios.Recepcionista
                     Dni = s.Dni
                 })
                 .ToList();
+
+            cmbSocios.ItemsSource = _todosLosSocios;
+
+            // La "vista" es una capa sobre la lista que permite ocultar elementos
+            // sin sacarlos de la lista original.
+            _vistaSocios = CollectionViewSource.GetDefaultView(cmbSocios.ItemsSource);
+            _vistaSocios.Filter = FiltrarSocio;
+
+            // Escuchamos lo que se escribe dentro del propio ComboBox
+            cmbSocios.AddHandler(TextBoxBase.TextChangedEvent,
+                                 new TextChangedEventHandler(cmbSocios_TextChanged));
         }
 
         private void CargarPagos()
@@ -59,48 +74,37 @@ namespace SGG.Formularios.Recepcionista
             Pagos = new ObservableCollection<PagoVista>(_todosLosPagos);
         }
 
-        // Búsqueda sin desplegable, mismo patrón que el buscador de Admin (Reportes/GestionSocios):
-        // filtra por nombre o DNI y resuelve el socio recién cuando hay UNA única coincidencia.
-        private List<SocioVista> BuscarCandidatos(string texto)
+        private bool FiltrarSocio(object item)
         {
-            if (string.IsNullOrWhiteSpace(texto)) return new List<SocioVista>();
+            if (string.IsNullOrEmpty(_textoBusquedaSocio)) return true;
 
-            string criterio = texto.Trim();
-            return _todosLosSocios
-                .Where(s => s.NombreCompleto.Contains(criterio, StringComparison.OrdinalIgnoreCase)
-                         || s.Dni.Contains(criterio, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var socio = item as SocioVista;
+            if (socio == null) return false;
+
+            return socio.NombreCompleto.ToLower().Contains(_textoBusquedaSocio)
+                || socio.Dni.ToLower().Contains(_textoBusquedaSocio);
         }
 
-        private void txtBuscarSocio_TextChanged(object sender, TextChangedEventArgs e)
+        private void cmbSocios_TextChanged(object sender, TextChangedEventArgs e)
         {
-            hintBuscarSocio.Visibility = string.IsNullOrEmpty(txtBuscarSocio.Text)
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            var seleccionado = cmbSocios.SelectedItem as SocioVista;
 
-            var candidatos = BuscarCandidatos(txtBuscarSocio.Text);
-
-            if (candidatos.Count == 0)
+            // Si el texto coincide exactamente con el socio ya elegido, es porque
+            // alguien lo seleccionó: limpiamos el filtro y no abrimos nada.
+            if (seleccionado != null && cmbSocios.Text == seleccionado.NombreConDni)
             {
-                bool vacio = string.IsNullOrWhiteSpace(txtBuscarSocio.Text);
-                txtEstadoSocio.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x55, 0x55));
-                txtEstadoSocio.Text = vacio ? string.Empty : "No se encontró ningún socio.";
-                txtEstadoSocio.Visibility = vacio ? Visibility.Collapsed : Visibility.Visible;
+                _textoBusquedaSocio = "";
+                _vistaSocios?.Refresh();
                 return;
             }
 
-            if (candidatos.Count == 1)
-            {
-                var socio = candidatos[0];
-                txtEstadoSocio.Foreground = new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B));
-                txtEstadoSocio.Text = $"✔ Socio: {socio.NombreCompleto} · DNI {socio.Dni}";
-                txtEstadoSocio.Visibility = Visibility.Visible;
-                return;
-            }
+            _textoBusquedaSocio = cmbSocios.Text?.Trim().ToLower() ?? "";
+            _vistaSocios?.Refresh();
 
-            txtEstadoSocio.Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
-            txtEstadoSocio.Text = $"{candidatos.Count} coincidencias — seguí escribiendo";
-            txtEstadoSocio.Visibility = Visibility.Visible;
+            if (!cmbSocios.IsDropDownOpen)
+            {
+                cmbSocios.IsDropDownOpen = true;
+            }
         }
 
         private void AplicarFiltros()
@@ -144,15 +148,11 @@ namespace SGG.Formularios.Recepcionista
         {
             OcultarAvisos();
 
-            // Re-resuelve el socio desde el texto del buscador (nombre o DNI): si no hay
-            // exactamente una coincidencia, se mantiene el mismo aviso de siempre.
-            var candidatos = BuscarCandidatos(txtBuscarSocio.Text);
-            if (candidatos.Count != 1)
+            if (cmbSocios.SelectedItem is not SocioVista socio)
             {
                 MostrarError("Debe seleccionar un socio.");
                 return;
             }
-            var socio = candidatos[0];
 
             if (cmbMonto.SelectedItem is not PrecioMembresiaDemo precio)
             {
@@ -181,7 +181,8 @@ namespace SGG.Formularios.Recepcionista
             _todosLosPagos.Insert(0, nuevo);
             AplicarFiltros();
 
-            txtBuscarSocio.Clear();
+            cmbSocios.SelectedIndex = -1;
+            cmbSocios.Text = string.Empty;
             cmbMonto.SelectedIndex = -1;
             cmbMetodoPago.SelectedIndex = -1;
 

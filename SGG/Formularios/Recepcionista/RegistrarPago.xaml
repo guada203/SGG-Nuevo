@@ -24,16 +24,10 @@
             <StackPanel>
 
                 <TextBlock Text="Socio" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
-                <Grid Margin="0,0,0,10">
-                    <TextBox x:Name="txtBuscarSocio" Style="{StaticResource TextBoxConPlaceholder}"
-                             VerticalContentAlignment="Center"
-                             TextChanged="txtBuscarSocio_TextChanged"/>
-                    <TextBlock x:Name="hintBuscarSocio" Text="Buscar por nombre o DNI..."
-                               Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
-                               IsHitTestVisible="False"/>
-                </Grid>
-                <TextBlock x:Name="txtEstadoSocio" FontSize="12" TextWrapping="Wrap"
-                           Visibility="Collapsed" Margin="0,0,0,10"/>
+                <ComboBox x:Name="cmbSocios" Style="{StaticResource ComboBoxOscuro}"
+                          IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                          DisplayMemberPath="NombreConDni" SelectedValuePath="Id"
+                          Margin="0,0,0,14"/>
 
                 <TextBlock Text="Precio (membresía)" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
                 <ComboBox x:Name="cmbMonto" Style="{StaticResource ComboBoxOscuro}" Height="34"
