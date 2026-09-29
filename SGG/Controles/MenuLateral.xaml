@@ -10,7 +10,7 @@
 
             <TextBlock Text="SGG" FontSize="22" FontWeight="Bold" 
                        Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-            <TextBlock x:Name="txtRol" Text="ROL" FontSize="10" Foreground="#C5FF00" 
+            <TextBlock x:Name="txtRol" Text="ROL" FontSize="10" Foreground="#AAAAAA" 
                        HorizontalAlignment="Center" Margin="0,0,0,40"/>
 
             <!-- Botones específicos de Admin -->

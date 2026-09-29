@@ -88,7 +88,7 @@ namespace SGG.Formularios.Recepcionista
                 var barra = new Rectangle
                 {
                     Width = 28,
-                    Fill = new SolidColorBrush(Color.FromRgb(0xC5, 0xFF, 0x00)),
+                    Fill = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6)),
                     RadiusX = 3,
                     RadiusY = 3,
                     VerticalAlignment = VerticalAlignment.Bottom,

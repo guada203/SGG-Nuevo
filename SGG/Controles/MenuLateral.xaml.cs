@@ -39,6 +39,7 @@ namespace SGG.Controles
             // Normalizar entrada: evitar espacios y diferencias de mayúsculas
             string rolNorm = (rol ?? string.Empty).Trim();
             txtRol.Text = rolNorm.ToUpper();
+            txtRol.Foreground = ObtenerColorRol(rolNorm);
 
             panelAdmin.Visibility = string.Equals(rolNorm, "Administrador", System.StringComparison.OrdinalIgnoreCase)
                 ? Visibility.Visible : Visibility.Collapsed;
@@ -49,6 +50,19 @@ namespace SGG.Controles
 
             // Aplicar el botón activo por defecto (según SeccionActiva)
             MarcarActivo(SeccionActiva);
+        }
+
+        // Color de identidad del rol: cada perfil usa su color de marca
+        private static Brush ObtenerColorRol(string rol)
+        {
+            string hex = rol.ToUpper() switch
+            {
+                "ADMINISTRADOR" => "#C5FF00",
+                "RECEPCIONISTA" => "#3B82F6",
+                "ENTRENADOR" => "#A855F7",
+                _ => "#AAAAAA"
+            };
+            return (Brush)new BrushConverter().ConvertFrom(hex)!;
         }
 
         // Resalta el botón cuyo Tag coincida con el parámetro; resto quedan Transparent

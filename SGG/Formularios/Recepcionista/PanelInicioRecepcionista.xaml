@@ -44,14 +44,14 @@
             </Border>
 
             <!-- Ingresos del mes -->
-            <Border Grid.Column="1" Background="#181818" BorderBrush="#C5FF00" Margin="0,0,15,0" 
+            <Border Grid.Column="1" Background="#181818" BorderBrush="#3B82F6" Margin="0,0,15,0" 
                     BorderThickness="0,3,0,0" CornerRadius="8">
                 <StackPanel Margin="18" VerticalAlignment="Center">
                     <TextBlock FontSize="12" Foreground="#888888">
                         <Run Text="💰 "/><Run Text="Ingresos del mes"/>
                     </TextBlock>
                     <TextBlock x:Name="txtKpiIngresosMes" Text="—" FontSize="26" FontWeight="Bold" 
-                               Foreground="#C5FF00" Margin="0,5,0,0"/>
+                               Foreground="#3B82F6" Margin="0,5,0,0"/>
                     <TextBlock x:Name="txtTendenciaIngresos" Text="● Sin cambios" FontSize="10" 
                                Foreground="#888888" Margin="0,6,0,0"/>
                 </StackPanel>
