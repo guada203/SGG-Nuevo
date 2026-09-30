@@ -1,0 +1,138 @@
+﻿<Window x:Class="SGG.Formularios.Recepcionista.VentanaComprobante"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Comprobante de pago" Height="600" Width="520"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#181818">
+
+    <!-- Franja superior de acento: identidad Recepcionista (#3B82F6). -->
+    <Border Background="#181818" BorderBrush="#3B82F6" BorderThickness="0,3,0,0">
+        <Grid Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Encabezado -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                <TextBlock Text="SGG" FontSize="30" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="COMPROBANTE DE PAGO" FontSize="15" FontWeight="SemiBold"
+                           Foreground="#3B82F6" Margin="0,4,0,0"/>
+                <TextBlock Text="Sistema de Gestión de Gimnasio" FontSize="11"
+                           Foreground="#888888" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Datos del comprobante: pares etiqueta / valor separados por una línea. -->
+            <Border Grid.Row="1" Background="#1E1E2E" CornerRadius="8" Padding="18">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Comprobante N°" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtNumero" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Fecha y hora" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtFecha" Foreground="White" FontSize="13"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Socio" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtSocio" Foreground="White" FontSize="13"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="DNI" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtDni" Foreground="White" FontSize="13"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Concepto" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtConcepto" Foreground="White" FontSize="13" TextWrapping="Wrap"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Monto" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtMonto" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Método de pago" Foreground="#AAAAAA"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" BorderBrush="#2A2A3D" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+                            <TextBlock x:Name="txtMetodo" Foreground="White" FontSize="13"/>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Pie de leyenda -->
+            <StackPanel Grid.Row="2" Margin="0,20,0,0">
+                <TextBlock Text="¡Gracias por tu pago!" FontSize="14" FontWeight="SemiBold"
+                           Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="SGG — Sistema de Gestión de Gimnasio" FontSize="11"
+                           Foreground="#888888" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Acciones -->
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="🖨️ Imprimir / PDF" Height="36" Padding="16,0" Margin="0,0,10,0"
+                        Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                        BorderThickness="0" Cursor="Hand"
+                        Click="btnImprimir_Click"/>
+                <Button Content="Cerrar" Height="36" Width="100"
+                        Background="#2A2A3D" Foreground="White" BorderThickness="0" Cursor="Hand"
+                        Click="btnCerrar_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
