@@ -2,11 +2,10 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using SGG.Formularios.Login;
 
 namespace SGG.Formularios.Entrenador
 {
-    public partial class VentanaListaRutinas : Window
+    public partial class VentanaListaRutinas : UserControl
     {
         private List<RutinaListItem> _todasLasRutinas;
         private string _filtroActual = "Todas";
@@ -76,7 +75,7 @@ namespace SGG.Formularios.Entrenador
         private void btnCrearRutina_Click(object sender, RoutedEventArgs e)
         {
             var formulario = new VentanaGestionRutinas();
-            formulario.Owner = this;
+            formulario.Owner = Window.GetWindow(this);
             formulario.ShowDialog();
         }
 
@@ -88,7 +87,7 @@ namespace SGG.Formularios.Entrenador
             if (rutina != null)
             {
                 var formulario = new VentanaGestionRutinas(rutina);
-                formulario.Owner = this;
+                formulario.Owner = Window.GetWindow(this);
                 formulario.ShowDialog();
             }
         }
@@ -104,20 +103,6 @@ namespace SGG.Formularios.Entrenador
                     $"Rutina: {rutina.Nombre}\nSocio: {rutina.SocioNombre}\nDuración: {rutina.DuracionSemanas} semanas\nEjercicios: {rutina.CantidadEjercicios}\nEstado: {rutina.Estado}",
                     "Detalle de la rutina");
             }
-        }
-
-        private void btnInicio_Click(object sender, RoutedEventArgs e)
-        {
-            var inicio = new VentanaPrincipalEntrenador();
-            inicio.Show();
-            this.Close();
-        }
-
-        private void btnCerrarSesion_Click(object sender, RoutedEventArgs e)
-        {
-            var ventanaRol = new VentanaSeleccionRol();
-            ventanaRol.Show();
-            this.Close();
         }
     }
 

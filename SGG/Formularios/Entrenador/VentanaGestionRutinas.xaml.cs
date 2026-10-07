@@ -25,6 +25,7 @@ namespace SGG.Formularios.Entrenador
         public VentanaGestionRutinas()
         {
             InitializeComponent();
+            Validadores.SoloNumeros(txtSemanas);
             InicializarDatos();
         }
 

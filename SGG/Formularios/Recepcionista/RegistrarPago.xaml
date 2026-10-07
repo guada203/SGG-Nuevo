@@ -1,0 +1,105 @@
+﻿<UserControl x:Class="SGG.Formularios.Recepcionista.RegistrarPago"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="35">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Encabezado -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <StackPanel HorizontalAlignment="Left">
+                <TextBlock Text="REGISTRAR PAGO" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Registrar pagos de cuota y consultar el historial" FontSize="13" 
+                           Foreground="#888888" Margin="0,3,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Formulario de carga -->
+        <Border Grid.Row="1" Background="#181818" BorderBrush="#3B82F6" BorderThickness="0,3,0,0" 
+                CornerRadius="8" Padding="18" Margin="0,0,0,15" 
+                HorizontalAlignment="Left" Width="500" VerticalAlignment="Top">
+            <StackPanel>
+
+                <TextBlock Text="Socio" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
+                <ComboBox x:Name="cmbSocios" Style="{StaticResource ComboBoxOscuro}"
+                          IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                          DisplayMemberPath="NombreConDni" SelectedValuePath="Id"
+                          Margin="0,0,0,14"/>
+
+                <TextBlock Text="Precio (membresía)" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
+                <ComboBox x:Name="cmbMonto" Style="{StaticResource ComboBoxOscuro}" Height="34"
+                          DisplayMemberPath="Etiqueta" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Método de pago" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
+                <ComboBox x:Name="cmbMetodoPago" Style="{StaticResource ComboBoxOscuro}" Height="34" Margin="0,0,0,12">
+                    <ComboBoxItem Content="Efectivo"/>
+                    <ComboBoxItem Content="Tarjeta"/>
+                    <ComboBoxItem Content="Transferencia"/>
+                </ComboBox>
+
+                <TextBlock x:Name="txtError" 
+                           Foreground="#FF5555" FontSize="12"
+                           TextWrapping="Wrap" 
+                           Margin="0,0,0,8" 
+                           Visibility="Collapsed"/>
+                <TextBlock x:Name="txtExito" 
+                           Foreground="#5BE49B" FontSize="12"
+                           TextWrapping="Wrap" 
+                           Margin="0,0,0,8" 
+                           Visibility="Collapsed"/>
+
+                <Button Content="💵 REGISTRAR PAGO" Height="38" 
+                        Background="#3B82F6" Foreground="White" FontWeight="Bold"
+                        BorderThickness="0" Cursor="Hand"
+                        Click="btnRegistrarPago_Click"/>
+
+            </StackPanel>
+        </Border>
+
+        <!-- Pagos recientes -->
+        <Border Grid.Row="2" Background="#181818" CornerRadius="8" Padding="18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="🧾 Pagos recientes" FontSize="14" FontWeight="SemiBold" 
+                               Foreground="White" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Grid Width="240" Height="30">
+                            <TextBox x:Name="txtBuscarPago"
+                                     Style="{StaticResource TextBoxConPlaceholder}"
+                                     TextChanged="txtBuscarPago_TextChanged"/>
+                            <TextBlock x:Name="hintBuscarPago" Text="Buscar por nombre o DNI..."
+                                       Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
+                                       IsHitTestVisible="False"/>
+                        </Grid>
+                        <DatePicker x:Name="dpFiltroFecha" Width="140" Margin="8,0,0,0" VerticalAlignment="Center"
+                                    SelectedDateChanged="dpFiltroFecha_SelectedDateChanged"/>
+                        <Button x:Name="btnLimpiarFiltros" Content="✕ Limpiar" Height="30" Padding="12,0" Margin="8,0,0,0"
+                                Background="#2A2A3D" Foreground="White" BorderThickness="0" Cursor="Hand"
+                                Click="btnLimpiarFiltros_Click"/>
+                    </StackPanel>
+                </Grid>
+                <DataGrid Grid.Row="1" x:Name="dgPagos">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Socio" Binding="{Binding Socio}" Width="200"/>
+                        <DataGridTextColumn Header="DNI" Binding="{Binding Dni}" Width="110"/>
+                        <DataGridTextColumn Header="Monto" Binding="{Binding Monto}" Width="120"/>
+                        <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha}" Width="120"/>
+                        <DataGridTextColumn Header="Método" Binding="{Binding Metodo}" Width="140"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

@@ -9,13 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SGG.Datos\SGG.Datos.csproj" />
-    <ProjectReference Include="..\SGG.Logica\SGG.Logica.csproj" />
+    <Compile Remove="Logica\**" />
+    <EmbeddedResource Remove="Logica\**" />
+    <None Remove="Logica\**" />
+    <Page Remove="Logica\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Formularios\Entrenador\" />
-    <Folder Include="Formularios\Recepcionista\" />
+    <ProjectReference Include="..\SGG.Datos\SGG.Datos.csproj" />
+    <ProjectReference Include="..\SGG.Logica\SGG.Logica.csproj" />
   </ItemGroup>
 
 </Project>
