@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SGG.Dominio.Entidades;
 
 namespace SGG.Datos.Contexto
@@ -13,10 +14,27 @@ namespace SGG.Datos.Contexto
         public DbSet<Asistencia> Asistencias { get; set; }
         public DbSet<Rutina> Rutinas { get; set; }
 
+        private const string CadenaConexionPorDefecto =
+            @"Server=.\SQLEXPRESS;Database=SGG;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=30;";
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(
-    @"Server=DESKTOP-2GR5V5M\SQLEXPRESS;Database=SGG;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=30;");
+            optionsBuilder.UseSqlServer(ObtenerCadenaConexion());
+        }
+
+        // Lee ConnectionStrings:SGG de appsettings.json (plantilla del repo) y, si existe,
+        // de appsettings.local.json (archivo local de cada desarrolladora, fuera de git).
+        // Si no hay archivos de configuración, cae a la instancia local por defecto de SQL Express.
+        private static string ObtenerCadenaConexion()
+        {
+            var configuracion = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: false)
+                .Build();
+
+            var cadena = configuracion.GetConnectionString("SGG");
+            return string.IsNullOrWhiteSpace(cadena) ? CadenaConexionPorDefecto : cadena;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -31,7 +31,8 @@
 - [ ] **Panel de inicio** (`PanelInicioRecepcionista.xaml.cs`): reemplazar `DatosRecepDemo` por `ServicioDashboard` (mismo patrón que ya usa el Admin). KPIs + gráfico de ingresos reales.
 - [ ] **Gestión de Socios** (`GestionSocios.xaml.cs`): usar `ServicioSocios` (existe pero esta pantalla no lo usa). Grilla, edición y baja contra BD.
 - [ ] **AltaSocio** (`AltaSocio.xaml.cs`): usar `ServicioSocios.AltaSocio()` — ya valida nombre, apellido, DNI duplicado y membresía vigente.
-- [ ] **RegistrarPago** (`RegistrarPago.xaml.cs`): crear `ServicioPagos` que inserte en `Pagos` y extienda el vencimiento de la membresía (renovación).
+- [x] **RegistrarPago** (`RegistrarPago.xaml.cs`): registro real de pagos implementado — `ServicioPagos` + `PagoRepositorio.Agregar` + comprobante imprimible.
+  - [ ] Renovación de membresía: al registrar el pago, extender `Membresia.FechaVencimiento` (todavía pendiente).
 - [ ] **ControlAsistencia** (`ControlAsistencia.xaml.cs`): crear `AsistenciaRepositorio` — registrar ingreso en `Asistencias`, historial y estado de cuota real (vencida / al día) según `FechaVencimiento`.
 
 ---
@@ -77,3 +78,41 @@
 6. Conectar Entrenador (rutinas, ejercicios, mis alumnos, panel).
 
 > Nota: al conectar, los nombres que hoy se ven (Ana García, Martín López, etc.) serán reemplazados por los datos reales del script `SGG.Datos/Scripts/02_DatosPrueba.sql`.
+
+---
+
+## 7. Setup para otra máquina (cadena de conexión)
+
+Pasos para dejar el sistema funcionando en una máquina distinta a la de desarrollo original. No hace falta tocar código: la cadena de conexión se resuelve por archivos de configuración.
+
+1. **Traer el código actualizado.** Clonar el repositorio o, si ya lo tiene, actualizarse a la rama de trabajo:
+   ```
+   git fetch origin
+   git checkout feature/gest-usuarios
+   git pull
+   ```
+
+2. **Instalar SQL Server Express + SSMS.** Cualquier instancia sirve (por defecto `.\SQLEXPRESS`). Instalar SQL Server Management Studio para ejecutar los scripts.
+
+3. **Crear la base `SGG`.** El `CREATE DATABASE SGG;` está comentado al inicio de `SGG.Datos/Scripts/01_EsquemaBase.sql`. Descomentarlo (junto con el `GO` siguiente) o crear la base a mano desde SSMS.
+
+4. **Ejecutar los scripts en orden** desde SSMS, conectado a la instancia local:
+   - `SGG.Datos/Scripts/01_EsquemaBase.sql` — esquema de tablas.
+   - `SGG.Datos/Scripts/02_DatosPrueba.sql` — datos de prueba (usuarios, socios, membresías, pagos).
+   - `SGG.Datos/Scripts/03_MigrarNormalizarUsuarioRol.sql` — **obligatorio**: sin él el login falla porque EF espera `Usuarios.RolId` y la tabla `Roles`.
+
+5. **Configurar la conexión sin tocar código.** Crear el archivo `SGG.Datos\appsettings.local.json` con su instancia local, por ejemplo:
+   ```json
+   {
+     "ConnectionStrings": {
+       "SGG": "Server=.\\SQLEXPRESS;Database=SGG;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=30;"
+     }
+   }
+   ```
+   Ese archivo está en `.gitignore`: es de cada máquina y nunca genera conflictos en git.
+
+6. **Compilar y ejecutar.** Login con `admin@sgg.com` / `Admin123` (o cualquier otro usuario de los seed del script 02).
+
+**Precedencia de la configuración:** `appsettings.json` es la plantilla commiteada (instancia `.\SQLEXPRESS`); `appsettings.local.json` la pisa si existe. Si no hay ningún archivo, la aplicación cae a `.\SQLEXPRESS` por defecto.
+
+> Advertencia: los datos del script `02_DatosPrueba.sql` son de agosto 2026, así que las membresías y cuotas van a verse vencidas y "ingresos del mes" puede dar cero. Es el comportamiento esperado, no un bug.

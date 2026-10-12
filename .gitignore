@@ -6,6 +6,9 @@
 # CodeGraph local index
 .codegraph/
 
+# Cadena de conexión local de cada desarrolladora (no se commitea)
+appsettings.local.json
+
 # User-specific files
 *.rsuser
 *.suo
