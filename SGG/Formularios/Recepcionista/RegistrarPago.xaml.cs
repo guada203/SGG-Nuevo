@@ -218,7 +218,7 @@ namespace SGG.Formularios.Recepcionista
             }
 
             var servicioPagos = new ServicioPagos();
-            var (exitoso, mensaje, pagoGuardado) = servicioPagos.RegistrarPago(
+            var (exitoso, mensaje, pagoGuardado, nuevoVencimiento) = servicioPagos.RegistrarPago(
                 socio.Id, _montoMembresia.Value, metodoItem.Content.ToString() ?? string.Empty);
 
             if (!exitoso || pagoGuardado == null)
@@ -232,6 +232,13 @@ namespace SGG.Formularios.Recepcionista
             // para que la fila del historial muestre nombre y DNI y no "—".
             pagoGuardado.Socio = _sociosPorId.GetValueOrDefault(socio.Id);
 
+            // La cuota ya se renovó en la base; refrescamos la copia en memoria.
+            if (nuevoVencimiento.HasValue
+                && _sociosPorId.TryGetValue(socio.Id, out var socioCache))
+            {
+                socioCache.FechaVencimiento = nuevoVencimiento.Value;
+            }
+
             // El comprobante se emite con el pago ya guardado en la base.
             var concepto = ConstruirConcepto(socio.Id);
 
@@ -240,9 +247,12 @@ namespace SGG.Formularios.Recepcionista
 
             LimpiarFormulario();
 
-            new VentanaComprobante(pagoGuardado, socio.NombreCompleto, socio.Dni, concepto).ShowDialog();
+            new VentanaComprobante(pagoGuardado, socio.NombreCompleto, socio.Dni, concepto,
+                                   nuevoVencimiento).ShowDialog();
 
-            txtExito.Text = mensaje;
+            txtExito.Text = nuevoVencimiento.HasValue
+                ? $"{mensaje} Nuevo vencimiento: {nuevoVencimiento.Value.ToString("dd/MM/yyyy", EsAr)}."
+                : mensaje;
             txtExito.Visibility = Visibility.Visible;
         }
 

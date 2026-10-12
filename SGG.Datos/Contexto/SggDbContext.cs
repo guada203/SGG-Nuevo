@@ -55,6 +55,15 @@ namespace SGG.Datos.Contexto
             modelBuilder.Entity<Membresia>()
                 .Property(m => m.TipoActividad)
                 .HasConversion<string>();
+
+            // Las fechas de la cuota del socio se guardan como DATE en la base.
+            modelBuilder.Entity<Socio>()
+                .Property(s => s.FechaAlta)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<Socio>()
+                .Property(s => s.FechaVencimiento)
+                .HasColumnType("date");
         }
     }
 }

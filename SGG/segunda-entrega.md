@@ -14,13 +14,14 @@
 | Admin — Gestión de Usuarios + AltaUsuario | ✅ Conectado a BD | `ServicioUsuarios` |
 | Admin — Gestión de Membresías + AltaMembresia | ✅ Conectado a BD | `ServicioMembresias` |
 | Admin — Reportes | ❌ Demo | `DatosRecepDemo` |
-| Recepcionista — todas las pantallas | ❌ Demo | `DatosRecepDemo` |
+| Recepcionista — RegistrarPago (pago + renovación + comprobante) | ✅ Conectado a BD | `ServicioPagos` |
+| Recepcionista — resto de las pantallas | ❌ Demo | `DatosRecepDemo` |
 | Entrenador — todas las ventanas | ❌ Demo | listas en memoria (`CargarDatosDePrueba`) |
 
 **Ya existen** (no se vuelven a crear):
 
 - Repositorios: `SocioRepositorio`, `PagoRepositorio`, `MembresiaRepositorio`, `UsuarioRepositorio`, `RolRepositorio` (`SGG.Datos/Repositorios`).
-- Servicios: `ServicioUsuarios`, `ServicioSocios`, `ServicioReportes`, `ServicioMembresias`, `ServicioDashboard`, `ServicioAutenticacion` (`SGG.Logica/Servicios`).
+- Servicios: `ServicioUsuarios`, `ServicioSocios`, `ServicioPagos`, `ServicioReportes`, `ServicioMembresias`, `ServicioDashboard`, `ServicioAutenticacion` (`SGG.Logica/Servicios`).
 - Entidades de dominio: `Socio`, `Membresia`, `Pago`, `Asistencia`, `Rutina`, `Ejercicio`, `Usuario`, `Rol` (`SGG.Dominio/Entidades`).
 - Tablas en BD: `Membresias`, `Usuarios`, `Socios`, `Pagos`, `Asistencias`, `Rutinas` (script `SGG.Datos/Scripts/01_EsquemaBase.sql`).
 
@@ -32,8 +33,8 @@
 - [ ] **Gestión de Socios** (`GestionSocios.xaml.cs`): usar `ServicioSocios` (existe pero esta pantalla no lo usa). Grilla, edición y baja contra BD.
 - [ ] **AltaSocio** (`AltaSocio.xaml.cs`): usar `ServicioSocios.AltaSocio()` — ya valida nombre, apellido, DNI duplicado y membresía vigente.
 - [x] **RegistrarPago** (`RegistrarPago.xaml.cs`): registro real de pagos implementado — `ServicioPagos` + `PagoRepositorio.Agregar` + comprobante imprimible.
-  - [ ] Renovación de membresía: al registrar el pago, extender `Membresia.FechaVencimiento` (todavía pendiente).
-- [ ] **ControlAsistencia** (`ControlAsistencia.xaml.cs`): crear `AsistenciaRepositorio` — registrar ingreso en `Asistencias`, historial y estado de cuota real (vencida / al día) según `FechaVencimiento`.
+  - [x] Renovación de cuota: al registrar el pago se extiende el vencimiento del socio por exactamente un mes (se apila sobre el vencimiento actual si todavía está vigente; si ya venció, se cuenta desde hoy) y el comprobante muestra el nuevo vencimiento. Modelo elegido (Opción B): el vencimiento vive en `Socio`; `Membresia` queda como catálogo de planes.
+- [ ] **ControlAsistencia** (`ControlAsistencia.xaml.cs`): crear `AsistenciaRepositorio` + `ServicioAsistencias` — registrar ingreso en `Asistencias`, historial y estado de cuota real (vencida / al día) según `Socio.FechaVencimiento` (ya disponible desde el script 04).
 
 ---
 
@@ -59,21 +60,19 @@
 ## 5. Base de datos — esquema y decisiones pendientes
 
 - [ ] **`Socios.EntrenadorId`** (FK → `Usuarios.Id`): sin esto no existen "Mis Alumnos" ni la asignación socio→entrenador en BD. Es migración.
-- [ ] **Historial de membresías (decisión)**:
-  - Opción A (recomendada): `Membresias` pasa a ser **1:N** con `SocioId` — cada renovación es una fila. Hace reales "cuotas por vencer" e "ingresos del mes".
-  - Opción B: mantener 1:1 (como está) y registrar solo los pagos. Menos exacto para historial.
+- [x] **Historial de membresías (decisión resuelta)**: se adoptó la **Opción B**: `Membresia` queda como **catálogo de planes** y la fecha de vencimiento de la cuota vive en `Socio` (`Socios.FechaVencimiento`), una por socio. La renovación apila un mes sobre el vencimiento vigente (o cuenta desde hoy si ya venció). Implementado en el script `04_MoverVencimientoASocio.sql`. La Opción A (`Membresias` en 1:N con `SocioId`, una fila por período) queda descartada para esta entrega: aportaría historial de períodos, que hoy no es un requerimiento de la UI.
 - [ ] **Tabla `Rutinas`**: faltan columnas que la UI ya muestra — `Estado`, `DuracionSemanas`, `FrecuenciaSemanal`, `Nivel`, `Objetivo`. Verificar también `Ejercicio`. Es migración.
-- [ ] **`Socios.FechaAlta`** (opcional pero recomendado): hoy "nuevos socios del mes" usa como aproximación la fecha de inicio de la membresía. Con `FechaAlta` propia el dato es exacto.
+- [x] **`Socios.FechaAlta`**: implementado en el script `04_MoverVencimientoASocio.sql`. "Nuevos socios del mes" ahora usa la fecha de alta propia del socio (`SocioRepositorio.ContarNuevosDelMes`), no la fecha de inicio de la membresía.
 - [ ] **Actividad reciente de dashboards**: NO crear tabla nueva; derivarla de `Pagos` + `Asistencias` recientes con consultas.
 
 ---
 
 ## 6. Orden de trabajo sugerido
 
-1. Migraciones de esquema (EntrenadorId, historial de membresías, columnas de Rutinas).
+1. Migraciones de esquema pendientes (`Socios.EntrenadorId`, columnas de `Rutinas`). El vencimiento por socio y `Socios.FechaAlta` ya se resolvieron en el script 04.
 2. Repositorios faltantes: `AsistenciaRepositorio`, `RutinaRepositorio`, `EjercicioRepositorio`.
-3. Servicios faltantes: `ServicioPagos`, `ServicioAsistencias`, `ServicioRutinas`.
-4. Conectar Recepcionista (panel, socios, alta, pagos, asistencia).
+3. Servicios faltantes: `ServicioAsistencias`, `ServicioRutinas` (`ServicioPagos` ya existe).
+4. Conectar Recepcionista (panel, socios, alta, asistencia).
 5. Conectar Reportes de Admin + limpiar simulaciones del dashboard.
 6. Conectar Entrenador (rutinas, ejercicios, mis alumnos, panel).
 
@@ -96,10 +95,11 @@ Pasos para dejar el sistema funcionando en una máquina distinta a la de desarro
 
 3. **Crear la base `SGG`.** El `CREATE DATABASE SGG;` está comentado al inicio de `SGG.Datos/Scripts/01_EsquemaBase.sql`. Descomentarlo (junto con el `GO` siguiente) o crear la base a mano desde SSMS.
 
-4. **Ejecutar los scripts en orden** desde SSMS, conectado a la instancia local:
+4. **Ejecutar los scripts en orden (01 → 02 → 03 → 04)** desde SSMS, conectado a la instancia local:
    - `SGG.Datos/Scripts/01_EsquemaBase.sql` — esquema de tablas.
    - `SGG.Datos/Scripts/02_DatosPrueba.sql` — datos de prueba (usuarios, socios, membresías, pagos).
    - `SGG.Datos/Scripts/03_MigrarNormalizarUsuarioRol.sql` — **obligatorio**: sin él el login falla porque EF espera `Usuarios.RolId` y la tabla `Roles`.
+   - `SGG.Datos/Scripts/04_MoverVencimientoASocio.sql` — **obligatorio**: agrega `FechaAlta` y `FechaVencimiento` a `Socios` (el vencimiento pasa a ser del socio, no del plan) y migra los datos actuales.
 
 5. **Configurar la conexión sin tocar código.** Crear el archivo `SGG.Datos\appsettings.local.json` con su instancia local, por ejemplo:
    ```json

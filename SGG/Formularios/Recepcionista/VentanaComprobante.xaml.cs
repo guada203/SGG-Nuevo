@@ -22,8 +22,10 @@ namespace SGG.Formularios.Recepcionista
         private readonly string _socioNombre;
         private readonly string _socioDni;
         private readonly string _concepto;
+        private readonly DateTime? _nuevoVencimiento;
 
-        public VentanaComprobante(Pago pago, string socioNombre, string socioDni, string concepto)
+        public VentanaComprobante(Pago pago, string socioNombre, string socioDni, string concepto,
+                                  DateTime? nuevoVencimiento = null)
         {
             InitializeComponent();
 
@@ -31,6 +33,7 @@ namespace SGG.Formularios.Recepcionista
             _socioNombre = socioNombre;
             _socioDni = socioDni;
             _concepto = concepto;
+            _nuevoVencimiento = nuevoVencimiento;
 
             txtNumero.Text = _pago.Id.ToString();
             txtFecha.Text = _pago.FechaPago.ToString("dd/MM/yyyy HH:mm", EsAr);
@@ -39,6 +42,17 @@ namespace SGG.Formularios.Recepcionista
             txtConcepto.Text = _concepto;
             txtMonto.Text = $"${_pago.Monto.ToString("N2", EsAr)}";
             txtMetodo.Text = _pago.MetodoPago;
+
+            // La fila de vencimiento solo se muestra cuando el socio tiene membresía renovada.
+            if (_nuevoVencimiento.HasValue)
+            {
+                txtVencimiento.Text = _nuevoVencimiento.Value.ToString("dd/MM/yyyy", EsAr);
+                filaVencimiento.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                filaVencimiento.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void btnImprimir_Click(object sender, RoutedEventArgs e)
@@ -151,6 +165,8 @@ namespace SGG.Formularios.Recepcionista
             yield return ("Concepto", _concepto);
             yield return ("Monto", $"${_pago.Monto.ToString("N2", EsAr)}");
             yield return ("Método de pago", _pago.MetodoPago);
+            if (_nuevoVencimiento.HasValue)
+                yield return ("Vencimiento", _nuevoVencimiento.Value.ToString("dd/MM/yyyy", EsAr));
         }
     }
 }

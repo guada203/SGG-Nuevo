@@ -37,15 +37,15 @@ namespace SGG.Datos.Repositorios
             return contexto.Socios.Count(s => !s.Activo);
         }
 
-        // "Nuevos socios del mes": como Socio no tiene fecha de alta propia, se toma como
-        // proxy la fecha de inicio de su membresía (FechaInicio), que representa cuándo se vinculó.
+        // "Nuevos socios del mes": usa la FechaAlta propia del socio.
         public int ContarNuevosDelMes()
         {
             using var contexto = new SggDbContext();
             var ahora = DateTime.Now;
             return contexto.Socios
-                .Where(s => s.Membresia.FechaInicio.Month == ahora.Month
-                         && s.Membresia.FechaInicio.Year == ahora.Year)
+                .Where(s => s.FechaAlta.HasValue
+                         && s.FechaAlta.Value.Month == ahora.Month
+                         && s.FechaAlta.Value.Year == ahora.Year)
                 .Count();
         }
 
@@ -59,6 +59,31 @@ namespace SGG.Datos.Repositorios
         {
             using var contexto = new SggDbContext();
             contexto.Socios.Add(socio);
+            contexto.SaveChanges();
+        }
+
+        // Actualiza solo los campos propios del socio. Se busca la fila en el contexto
+        // actual a propósito: con Update(socio) y la navegación Membresia cargada, EF
+        // marcaría también la membresía como modificada, y esa fila puede estar
+        // COMPARTIDA por varios socios.
+        public void Actualizar(Socio socio)
+        {
+            using var contexto = new SggDbContext();
+            var socioDb = contexto.Socios.Find(socio.Id);
+            if (socioDb == null)
+                return;
+
+            socioDb.Nombre = socio.Nombre;
+            socioDb.Apellido = socio.Apellido;
+            socioDb.Dni = socio.Dni;
+            socioDb.FechaNacimiento = socio.FechaNacimiento;
+            socioDb.Telefono = socio.Telefono;
+            socioDb.Email = socio.Email;
+            socioDb.Activo = socio.Activo;
+            socioDb.MembresiaId = socio.MembresiaId;
+            socioDb.FechaAlta = socio.FechaAlta;
+            socioDb.FechaVencimiento = socio.FechaVencimiento;
+
             contexto.SaveChanges();
         }
 
