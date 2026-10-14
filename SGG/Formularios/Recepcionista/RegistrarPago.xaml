@@ -27,11 +27,15 @@
                 <ComboBox x:Name="cmbSocios" Style="{StaticResource ComboBoxOscuro}"
                           IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
                           DisplayMemberPath="NombreConDni" SelectedValuePath="Id"
+                          SelectionChanged="cmbSocios_SelectionChanged"
                           Margin="0,0,0,14"/>
 
+                <!-- El precio YA NO se elige: sale de la membresía del socio seleccionado.
+                     Es solo lectura y se completa solo en cmbSocios_SelectionChanged. -->
                 <TextBlock Text="Precio (membresía)" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
-                <ComboBox x:Name="cmbMonto" Style="{StaticResource ComboBoxOscuro}" Height="34"
-                          DisplayMemberPath="Etiqueta" Margin="0,0,0,10"/>
+                <TextBox x:Name="txtPrecio" Height="34" Padding="8,0"
+                         IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                         Margin="0,0,0,10"/>
 
                 <TextBlock Text="Método de pago" Foreground="#AAAAAA" FontSize="12" Margin="0,0,0,4"/>
                 <ComboBox x:Name="cmbMetodoPago" Style="{StaticResource ComboBoxOscuro}" Height="34" Margin="0,0,0,12">

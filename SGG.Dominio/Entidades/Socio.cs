@@ -15,6 +15,11 @@ namespace SGG.Dominio.Entidades
         public string Email { get; set; } = string.Empty;
         public bool Activo { get; set; } = true;
 
+        // Fechas de la cuota del socio. La membresía es el catálogo de planes;
+        // el vencimiento es de cada socio (varios socios pueden compartir un plan).
+        public DateTime? FechaAlta { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+
         // Relación con Membresía (RF-06)
         public int MembresiaId { get; set; }
         public Membresia? Membresia { get; set; }

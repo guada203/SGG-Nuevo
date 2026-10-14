@@ -44,7 +44,10 @@ namespace SGG.Logica.Servicios
                 Telefono = telefono,
                 Email = email,
                 MembresiaId = membresiaId,
-                Activo = true
+                Activo = true,
+                // Alta hoy, pero todavía sin período pago: el primer pago fija el vencimiento.
+                FechaAlta = DateTime.Today,
+                FechaVencimiento = null
             };
 
             _socioRepositorio.Agregar(nuevoSocio);
