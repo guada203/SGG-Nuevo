@@ -15,13 +15,14 @@
 | Admin — Gestión de Membresías + AltaMembresia | ✅ Conectado a BD | `ServicioMembresias` |
 | Admin — Reportes | ❌ Demo | `DatosRecepDemo` |
 | Recepcionista — RegistrarPago (pago + renovación + comprobante) | ✅ Conectado a BD | `ServicioPagos` |
-| Recepcionista — resto de las pantallas | ❌ Demo | `DatosRecepDemo` |
+| Recepcionista — ControlAsistencia (ingreso + historial + estado de cuota) | ✅ Conectado a BD | `ServicioAsistencias` |
+| Recepcionista — Panel de inicio, Gestión de Socios y AltaSocio | ❌ Demo | `DatosRecepDemo` |
 | Entrenador — todas las ventanas | ❌ Demo | listas en memoria (`CargarDatosDePrueba`) |
 
 **Ya existen** (no se vuelven a crear):
 
-- Repositorios: `SocioRepositorio`, `PagoRepositorio`, `MembresiaRepositorio`, `UsuarioRepositorio`, `RolRepositorio` (`SGG.Datos/Repositorios`).
-- Servicios: `ServicioUsuarios`, `ServicioSocios`, `ServicioPagos`, `ServicioReportes`, `ServicioMembresias`, `ServicioDashboard`, `ServicioAutenticacion` (`SGG.Logica/Servicios`).
+- Repositorios: `SocioRepositorio`, `PagoRepositorio`, `AsistenciaRepositorio`, `MembresiaRepositorio`, `UsuarioRepositorio`, `RolRepositorio` (`SGG.Datos/Repositorios`).
+- Servicios: `ServicioUsuarios`, `ServicioSocios`, `ServicioPagos`, `ServicioAsistencias`, `ServicioReportes`, `ServicioMembresias`, `ServicioDashboard`, `ServicioAutenticacion` (`SGG.Logica/Servicios`).
 - Entidades de dominio: `Socio`, `Membresia`, `Pago`, `Asistencia`, `Rutina`, `Ejercicio`, `Usuario`, `Rol` (`SGG.Dominio/Entidades`).
 - Tablas en BD: `Membresias`, `Usuarios`, `Socios`, `Pagos`, `Asistencias`, `Rutinas` (script `SGG.Datos/Scripts/01_EsquemaBase.sql`).
 
@@ -34,7 +35,8 @@
 - [ ] **AltaSocio** (`AltaSocio.xaml.cs`): usar `ServicioSocios.AltaSocio()` — ya valida nombre, apellido, DNI duplicado y membresía vigente.
 - [x] **RegistrarPago** (`RegistrarPago.xaml.cs`): registro real de pagos implementado — `ServicioPagos` + `PagoRepositorio.Agregar` + comprobante imprimible.
   - [x] Renovación de cuota: al registrar el pago se extiende el vencimiento del socio por exactamente un mes (se apila sobre el vencimiento actual si todavía está vigente; si ya venció, se cuenta desde hoy) y el comprobante muestra el nuevo vencimiento. Modelo elegido (Opción B): el vencimiento vive en `Socio`; `Membresia` queda como catálogo de planes.
-- [ ] **ControlAsistencia** (`ControlAsistencia.xaml.cs`): crear `AsistenciaRepositorio` + `ServicioAsistencias` — registrar ingreso en `Asistencias`, historial y estado de cuota real (vencida / al día) según `Socio.FechaVencimiento` (ya disponible desde el script 04).
+- [x] **ControlAsistencia** (`ControlAsistencia.xaml.cs`): conectado a la base real con `AsistenciaRepositorio` + `ServicioAsistencias`. Registra el ingreso en `Asistencias`, bloquea el ingreso si la cuota está vencida o el socio dado de baja (RF-08/RF-09), y muestra el historial por socio y el estado de cuota (Vencida / Al día) calculado desde `Socio.FechaVencimiento`.
+  - Nota de diseño: el historial se consulta **por `SocioId`**, no por nombre. El filtro de "asistencias de hoy" usa el rango `[hoy, mañana)` porque `FechaHoraIngreso.Date` no se traduce de forma confiable a SQL.
 
 ---
 
@@ -70,9 +72,9 @@
 ## 6. Orden de trabajo sugerido
 
 1. Migraciones de esquema pendientes (`Socios.EntrenadorId`, columnas de `Rutinas`). El vencimiento por socio y `Socios.FechaAlta` ya se resolvieron en el script 04.
-2. Repositorios faltantes: `AsistenciaRepositorio`, `RutinaRepositorio`, `EjercicioRepositorio`.
-3. Servicios faltantes: `ServicioAsistencias`, `ServicioRutinas` (`ServicioPagos` ya existe).
-4. Conectar Recepcionista (panel, socios, alta, asistencia).
+2. Repositorios faltantes: `RutinaRepositorio`, `EjercicioRepositorio` (`AsistenciaRepositorio` ya existe).
+3. Servicios faltantes: `ServicioRutinas` (`ServicioPagos` y `ServicioAsistencias` ya existen).
+4. Conectar Recepcionista: panel de inicio, gestión de socios y alta de socio (la asistencia y el pago ya están conectados).
 5. Conectar Reportes de Admin + limpiar simulaciones del dashboard.
 6. Conectar Entrenador (rutinas, ejercicios, mis alumnos, panel).
 
