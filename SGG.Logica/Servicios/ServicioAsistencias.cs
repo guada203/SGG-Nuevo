@@ -14,6 +14,8 @@ namespace SGG.Logica.Servicios
 
         public List<Asistencia> ObtenerPorSocio(int socioId) => _asistenciaRepositorio.ObtenerPorSocio(socioId);
 
+        public List<Asistencia> ObtenerTodos() => _asistenciaRepositorio.ObtenerTodos();
+
         /// <summary>
         /// RF-08/RF-09: registra el ingreso del socio validando que exista,
         /// esté activo y tenga la cuota al día.

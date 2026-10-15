@@ -54,6 +54,42 @@ namespace SGG.Logica.Servicios
             return (true, "Socio registrado con éxito.");
         }
 
+        /// <summary>
+        /// RF-02: actualiza los datos de un socio existente. El DNI es inalterable y la
+        /// cuota del socio (FechaAlta / FechaVencimiento) no se modifica al editar los datos.
+        /// </summary>
+        public (bool Exitoso, string Mensaje) EditarSocio(
+            int id, string nombre, string apellido, DateTime fechaNacimiento,
+            string telefono, string email, int membresiaId)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+                return (false, "El nombre es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(apellido))
+                return (false, "El apellido es obligatorio.");
+
+            if (fechaNacimiento > DateTime.Today)
+                return (false, "La fecha de nacimiento no puede ser futura.");
+
+            var socio = _socioRepositorio.ObtenerPorId(id);
+            if (socio == null)
+                return (false, "El socio no existe.");
+
+            var membresia = _membresiaRepositorio.ObtenerPorId(membresiaId);
+            if (membresia == null || !membresia.Vigente)
+                return (false, "La membresía seleccionada no existe o no está vigente.");
+
+            socio.Nombre = nombre;
+            socio.Apellido = apellido;
+            socio.FechaNacimiento = fechaNacimiento;
+            socio.Telefono = telefono;
+            socio.Email = email;
+            socio.MembresiaId = membresiaId;
+
+            _socioRepositorio.Actualizar(socio);
+            return (true, "Socio actualizado con éxito.");
+        }
+
         public (bool Exitoso, string Mensaje) DarDeBaja(int id)
         {
             var socio = _socioRepositorio.ObtenerPorId(id);
