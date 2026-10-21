@@ -13,6 +13,7 @@ namespace SGG.Datos.Contexto
         public DbSet<Pago> Pagos { get; set; }
         public DbSet<Asistencia> Asistencias { get; set; }
         public DbSet<Rutina> Rutinas { get; set; }
+        public DbSet<Ejercicio> Ejercicios { get; set; }
 
         private const string CadenaConexionPorDefecto =
             @"Server=.\SQLEXPRESS;Database=SGG;Trusted_Connection=True;TrustServerCertificate=True;Connect Timeout=30;";
@@ -64,6 +65,20 @@ namespace SGG.Datos.Contexto
             modelBuilder.Entity<Socio>()
                 .Property(s => s.FechaVencimiento)
                 .HasColumnType("date");
+
+
+            // Relación: una rutina contiene varios ejercicios.
+            // Cada ejercicio pertenece a una rutina mediante RutinaId.
+            modelBuilder.Entity<Rutina>()
+                .HasMany(r => r.Ejercicios)
+                .WithOne(e => e.Rutina)
+                .HasForeignKey(e => e.RutinaId);
+
+            // FechaAsignacion se almacena como DATE en SQL Server.
+            modelBuilder.Entity<Rutina>()
+                .Property(r => r.FechaAsignacion)
+                .HasColumnType("date");
+
         }
     }
 }
