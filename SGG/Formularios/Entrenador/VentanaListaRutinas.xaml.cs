@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Entrenador
 {
@@ -9,26 +10,45 @@ namespace SGG.Formularios.Entrenador
     {
         private List<RutinaListItem> _todasLasRutinas;
         private string _filtroActual = "Todas";
+        private readonly ServicioRutinas _servicioRutinas = new();
 
         public VentanaListaRutinas()
         {
             InitializeComponent();
-            CargarDatosDePrueba();
+            CargarRutinas();
             AplicarFiltros();
         }
 
-        private void CargarDatosDePrueba()
+
+        private void CargarRutinas()
         {
-            _todasLasRutinas = new List<RutinaListItem>
+            // Obtenemos las rutinas reales desde SQL Server.
+            var rutinas = _servicioRutinas.ObtenerTodas();
+
+            // Convertimos las entidades en objetos que
+            // nuestra interfaz ya sabe mostrar.
+            _todasLasRutinas = rutinas.Select(r => new RutinaListItem
             {
-                new RutinaListItem { Id = 1, Nombre = "Hipertrofia - Nivel Avanzado", SocioId = 1, SocioNombre = "Mateo Rodríguez", FechaCreacionTexto = "Creada el 21 Oct 2024", DuracionSemanas = 8, FrecuenciaSemanal = 4, Objetivo = "Aumentar masa muscular general", Nivel = "Avanzado", CantidadEjercicios = 12, Estado = "Activa" },
-                new RutinaListItem { Id = 2, Nombre = "Acondicionamiento General", SocioId = 2, SocioNombre = "Valeria Espinoza", FechaCreacionTexto = "Creada el 19 Oct 2024", DuracionSemanas = 6, FrecuenciaSemanal = 3, Objetivo = "Mejorar resistencia cardiovascular", Nivel = "Principiante", CantidadEjercicios = 8, Estado = "Activa" },
-                new RutinaListItem { Id = 3, Nombre = "Fuerza Funcional", SocioId = 3, SocioNombre = "Ignacio Silva", FechaCreacionTexto = "Creada el 18 Oct 2024", DuracionSemanas = 10, FrecuenciaSemanal = 4, Objetivo = "Ganar fuerza en levantamientos básicos", Nivel = "Intermedio", CantidadEjercicios = 10, Estado = "Activa" },
-                new RutinaListItem { Id = 4, Nombre = "Definición Muscular", SocioId = 1, SocioNombre = "Camila Peralta", FechaCreacionTexto = "Creada el 15 Oct 2024", DuracionSemanas = 4, FrecuenciaSemanal = 5, Objetivo = "Reducir grasa manteniendo masa muscular", Nivel = "Avanzado", CantidadEjercicios = 7, Estado = "Completada" },
-                new RutinaListItem { Id = 5, Nombre = "Rehabilitación Lumbar", SocioId = 2, SocioNombre = "Daniel Fuentes", FechaCreacionTexto = "Creada el 12 Oct 2024", DuracionSemanas = 12, FrecuenciaSemanal = 2, Objetivo = "Recuperar movilidad y fuerza lumbar", Nivel = "Principiante", CantidadEjercicios = 6, Estado = "Activa" },
-                new RutinaListItem { Id = 6, Nombre = "Cardio HIIT Intensivo", SocioId = 3, SocioNombre = "Sofía Martínez", FechaCreacionTexto = "Creada el 10 Oct 2024", DuracionSemanas = 6, FrecuenciaSemanal = 3, Objetivo = "Quemar grasa con entrenamiento interválico", Nivel = "Intermedio", CantidadEjercicios = 9, Estado = "Completada" },
-            };
+                Id = r.Id,
+                SocioId = r.SocioId,
+                Nombre = r.Nombre,
+
+                // Obtenemos el nombre del socio relacionado.
+                SocioNombre = r.Socio != null
+                    ? $"{r.Socio.Nombre} {r.Socio.Apellido}"
+                    : "Socio no encontrado",
+
+                FechaCreacionTexto = $"Asignada el {r.FechaAsignacion:dd/MM/yyyy}",
+                DuracionSemanas = r.DuracionSemanas,
+                FrecuenciaSemanal = r.FrecuenciaSemanal,
+                Objetivo = r.Objetivo,
+                Nivel = r.Nivel,
+                CantidadEjercicios = r.Ejercicios.Count,
+                Estado = r.Estado
+
+            }).ToList();
         }
+
 
         private void AplicarFiltros()
         {
@@ -76,8 +96,15 @@ namespace SGG.Formularios.Entrenador
         {
             var formulario = new VentanaGestionRutinas();
             formulario.Owner = Window.GetWindow(this);
-            formulario.ShowDialog();
+
+            // Si se guardó correctamente, actualizamos la lista.
+            if (formulario.ShowDialog() == true)
+            {
+                CargarRutinas();
+                AplicarFiltros();
+            }
         }
+
 
         private void btnEditar_Click(object sender, RoutedEventArgs e)
         {
@@ -88,9 +115,17 @@ namespace SGG.Formularios.Entrenador
             {
                 var formulario = new VentanaGestionRutinas(rutina);
                 formulario.Owner = Window.GetWindow(this);
-                formulario.ShowDialog();
+
+                // Si el entrenador guardó los cambios correctamente,
+                // volvemos a consultar las rutinas en SQL Server.
+                if (formulario.ShowDialog() == true)
+                {
+                    CargarRutinas();
+                    AplicarFiltros();
+                }
             }
         }
+
 
         private void btnVerDetalle_Click(object sender, RoutedEventArgs e)
         {

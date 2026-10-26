@@ -1,12 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Entrenador
 {
     public partial class VentanaElegirRutina : Window
     {
         private readonly int _socioIdDestino;
+        private readonly ServicioRutinas _servicioRutinas = new();
+
 
         public VentanaElegirRutina(int socioIdDestino)
         {
@@ -15,19 +19,36 @@ namespace SGG.Formularios.Entrenador
             CargarRutinasDisponibles();
         }
 
+
         private void CargarRutinasDisponibles()
         {
-            // Datos de prueba -- cuando conectemos la base, esto va a traer
-            // todas las rutinas reales que existan (de cualquier socio).
-            var rutinas = new List<RutinaListItem>
-            {
-                new RutinaListItem { Id = 1, Nombre = "Hipertrofia - Nivel Avanzado", DuracionSemanas = 8, FrecuenciaSemanal = 4, Objetivo = "Aumentar masa muscular general", Nivel = "Avanzado" },
-                new RutinaListItem { Id = 2, Nombre = "Acondicionamiento General", DuracionSemanas = 6, FrecuenciaSemanal = 3, Objetivo = "Mejorar resistencia cardiovascular", Nivel = "Principiante" },
-                new RutinaListItem { Id = 3, Nombre = "Fuerza Funcional", DuracionSemanas = 10, FrecuenciaSemanal = 4, Objetivo = "Ganar fuerza en levantamientos básicos", Nivel = "Intermedio" },
-            };
+            // Obtenemos todas las rutinas guardadas en SQL Server.
+            var rutinasDb = _servicioRutinas.ObtenerTodas();
 
+            // Convertimos las rutinas en objetos que nuestra
+            // interfaz ya sabe mostrar.
+            var rutinas = rutinasDb.Select(r => new RutinaListItem
+            {
+                Id = r.Id,
+                SocioId = r.SocioId,
+                Nombre = r.Nombre,
+                DuracionSemanas = r.DuracionSemanas,
+                FrecuenciaSemanal = r.FrecuenciaSemanal,
+                Objetivo = r.Objetivo,
+                Nivel = r.Nivel,
+                Estado = r.Estado,
+                CantidadEjercicios = r.Ejercicios.Count,
+
+                SocioNombre = r.Socio != null
+                    ? $"{r.Socio.Nombre} {r.Socio.Apellido}"
+                    : "Socio no encontrado"
+
+            }).ToList();
+
+            // Mostramos las rutinas reales en la ventana.
             icRutinasDisponibles.ItemsSource = rutinas;
         }
+
 
         private void btnAsignar_Click(object sender, RoutedEventArgs e)
         {
