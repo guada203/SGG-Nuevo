@@ -18,12 +18,19 @@ namespace SGG.Formularios.Recepcionista
         private readonly ServicioPagos _servicioPagos = new();
         private readonly ServicioAsistencias _servicioAsistencias = new();
 
+        private static readonly string[] MesesCortos =
+            { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+
+        private static readonly string[] MesesLargos =
+            { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
+
         public PanelInicioRecepcionista()
         {
             InitializeComponent();
             CargarEncabezado();
             CargarKpis();
             CargarGraficoIngresos();
+            CargarAlertaVencidos();
             CargarActividadReciente();
         }
 
@@ -47,6 +54,70 @@ namespace SGG.Formularios.Recepcionista
             txtTendenciaCuotas.Text = $"▲ {cuotasPorVencer} próx. 30 días";
         }
 
+        // Alerta del panel: socios activos con la cuota ya vencida. Cuando no hay
+        // ninguno el panel queda en verde como confirmación, no oculto.
+        private void CargarAlertaVencidos()
+        {
+            var vencidos = _servicioDashboard.ObtenerSociosVencidos();
+
+            wpVencidos.Children.Clear();
+
+            if (vencidos.Count == 0)
+            {
+                panelVencidos.Background = new SolidColorBrush(Color.FromArgb(0x0D, 0x5B, 0xE4, 0x9B));
+                panelVencidos.BorderBrush = new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B));
+                txtTituloVencidos.Foreground = new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B));
+                txtTituloVencidos.Text = "✓ No hay socios con cuota vencida";
+                scrollVencidos.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            panelVencidos.Background = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0x55, 0x55));
+            panelVencidos.BorderBrush = new SolidColorBrush(Color.FromRgb(0xFF, 0x55, 0x55));
+            txtTituloVencidos.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x55, 0x55));
+            txtTituloVencidos.Text = vencidos.Count == 1
+                ? "⚠ 1 socio con cuota vencida"
+                : $"⚠ {vencidos.Count} socios con cuota vencida";
+            scrollVencidos.Visibility = Visibility.Visible;
+
+            foreach (var socio in vencidos)
+            {
+                var vencimiento = socio.FechaVencimiento ?? DateTime.Today;
+                int dias = Math.Max(1, (DateTime.Today - vencimiento.Date).Days);
+                string detalleDias = dias == 1 ? "venció hace 1 día" : $"venció hace {dias} días";
+
+                var nombre = new TextBlock
+                {
+                    Text = $"{socio.Nombre} {socio.Apellido}".Trim(),
+                    FontSize = 12,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = Brushes.White
+                };
+
+                var detalle = new TextBlock
+                {
+                    Text = $"DNI {socio.Dni} · {detalleDias}",
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x88, 0x88))
+                };
+
+                var contenido = new StackPanel();
+                contenido.Children.Add(nombre);
+                contenido.Children.Add(detalle);
+
+                var chip = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(0x33, 0x22, 0x22, 0x22)),
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(10, 6, 10, 6),
+                    Margin = new Thickness(0, 0, 8, 8),
+                    Child = contenido
+                };
+
+                wpVencidos.Children.Add(chip);
+            }
+        }
+
         private void CargarGraficoIngresos()
         {
             // Serie de ingresos de los últimos 6 meses calculada a partir de los
@@ -60,22 +131,35 @@ namespace SGG.Formularios.Recepcionista
             }
 
             decimal mesActual = ingresos[^1].Total;
+            var mesActualInfo = ingresos[^1].Mes;
             decimal mesAnterior = ingresos.Count >= 2 ? ingresos[^2].Total : 0;
+            var mesAnteriorInfo = ingresos.Count >= 2 ? ingresos[^2].Mes : mesActualInfo.AddMonths(-1);
+
+            // El título de la tarjeta nombra el mes al que corresponden los ingresos.
+            runEtiquetaIngresos.Text = $"Ingresos de {MesesLargos[mesActualInfo.Month - 1]}";
 
             if (mesAnterior > 0)
             {
                 decimal porcentaje = ((mesActual - mesAnterior) / mesAnterior) * 100;
-                txtTendenciaIngresos.Text = $"▲ {porcentaje:0.#}% vs. mes anterior";
-                txtTendenciaIngresos.Foreground = new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B));
+                bool sube = porcentaje >= 0;
+                string mesComparado = MesesCortos[mesAnteriorInfo.Month - 1];
+
+                txtTendenciaIngresos.Text = sube
+                    ? $"▲ {porcentaje:0.#}% vs. {mesComparado}"
+                    : $"▼ {Math.Abs(porcentaje):0.#}% vs. {mesComparado}";
+
+                txtTendenciaIngresos.Foreground = sube
+                    ? new SolidColorBrush(Color.FromRgb(0x5B, 0xE4, 0x9B))
+                    : new SolidColorBrush(Color.FromRgb(0xFF, 0x55, 0x55));
             }
             else
             {
-                // Sin mes anterior con datos no hay porcentaje representable.
-                txtTendenciaIngresos.Text = "● Sin cambios";
+                // Sin ingresos el mes anterior no hay porcentaje representable.
+                txtTendenciaIngresos.Text = $"● sin datos de {MesesCortos[mesAnteriorInfo.Month - 1]}";
+                txtTendenciaIngresos.Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
             }
 
             decimal maxTotal = ingresos.Max(i => i.Total);
-            string[] mesesCortos = { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
 
             for (int i = 0; i < ingresos.Count; i++)
             {
@@ -116,7 +200,7 @@ namespace SGG.Formularios.Recepcionista
                 var mes = ingresos[i].Mes;
                 var txtMes = new TextBlock
                 {
-                    Text = mesesCortos[mes.Month - 1],
+                    Text = MesesCortos[mes.Month - 1],
                     FontSize = 10,
                     Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)),
                     HorizontalAlignment = HorizontalAlignment.Center,

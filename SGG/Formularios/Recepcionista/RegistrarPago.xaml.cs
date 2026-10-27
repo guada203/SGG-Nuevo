@@ -89,7 +89,8 @@ namespace SGG.Formularios.Recepcionista
             Monto = $"${pago.Monto.ToString("N0", EsAr)}",
             FechaOriginal = pago.FechaPago,
             Fecha = pago.FechaPago.ToString("dd/MM/yyyy"),
-            Metodo = pago.MetodoPago
+            Metodo = pago.MetodoPago,
+            Entidad = pago
         };
 
         private bool FiltrarSocio(object item)
@@ -256,6 +257,27 @@ namespace SGG.Formularios.Recepcionista
             txtExito.Visibility = Visibility.Visible;
         }
 
+        // Reabre el comprobante de un pago ya registrado. No se pasa nuevo vencimiento
+        // (null) porque ese dato solo se conoce al momento del cobro y no se guarda en
+        // el pago: la ventana oculta esa fila cuando no lo recibe.
+        private void btnVerComprobante_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement elemento
+                || elemento.DataContext is not PagoVista fila
+                || fila.Entidad is not Pago pago)
+                return;
+
+            var socio = _sociosPorId.GetValueOrDefault(pago.SocioId);
+
+            string nombre = socio != null
+                ? $"{socio.Nombre} {socio.Apellido}".Trim()
+                : fila.Socio;
+
+            string dni = socio?.Dni ?? fila.Dni;
+
+            new VentanaComprobante(pago, nombre, dni, ConstruirConcepto(pago.SocioId)).ShowDialog();
+        }
+
         private string ConstruirConcepto(int socioId)
         {
             if (!_sociosPorId.TryGetValue(socioId, out var socio) || socio.Membresia == null)
@@ -301,5 +323,8 @@ namespace SGG.Formularios.Recepcionista
         public DateTime FechaOriginal { get; set; }
         public string Fecha { get; set; } = string.Empty;
         public string Metodo { get; set; } = string.Empty;
+
+        // Entidad original del pago: permite reabrir el comprobante desde el historial.
+        public Pago? Entidad { get; set; }
     }
 }

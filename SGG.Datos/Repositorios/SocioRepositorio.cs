@@ -51,6 +51,21 @@ namespace SGG.Datos.Repositorios
                 .Count();
         }
 
+        // Socios ACTIVOS cuya cuota ya venció (vencimiento estrictamente anterior a hoy).
+        // El orden es ascendente por fecha: primero los más atrasados.
+        public List<Socio> ObtenerVencidos()
+        {
+            using var contexto = new SggDbContext();
+            var hoy = DateTime.Today;
+            return contexto.Socios
+                .Include(s => s.Membresia)
+                .Where(s => s.Activo
+                    && s.FechaVencimiento.HasValue
+                    && s.FechaVencimiento.Value < hoy)
+                .OrderBy(s => s.FechaVencimiento)
+                .ToList();
+        }
+
         public bool ExisteDni(string dni)
         {
             using var contexto = new SggDbContext();

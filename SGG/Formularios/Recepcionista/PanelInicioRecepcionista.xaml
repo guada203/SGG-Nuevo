@@ -7,6 +7,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -48,7 +49,7 @@
                     BorderThickness="0,3,0,0" CornerRadius="8">
                 <StackPanel Margin="18" VerticalAlignment="Center">
                     <TextBlock FontSize="12" Foreground="#888888">
-                        <Run Text="💰 "/><Run Text="Ingresos del mes"/>
+                        <Run Text="💰 "/><Run x:Name="runEtiquetaIngresos" Text="Ingresos del mes"/>
                     </TextBlock>
                     <TextBlock x:Name="txtKpiIngresosMes" Text="—" FontSize="26" FontWeight="Bold" 
                                Foreground="#3B82F6" Margin="0,5,0,0"/>
@@ -74,8 +75,22 @@
 
         </Grid>
 
+        <!-- Alerta de socios con la cuota vencida -->
+        <Border x:Name="panelVencidos" Grid.Row="2" Background="#0D5BE49B" BorderBrush="#5BE49B"
+                BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,15,0,0">
+            <StackPanel>
+                <TextBlock x:Name="txtTituloVencidos" Text="✓ No hay socios con cuota vencida"
+                           FontSize="13" FontWeight="SemiBold" Foreground="#5BE49B"/>
+                <ScrollViewer x:Name="scrollVencidos" MaxHeight="120" Margin="0,10,0,0"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Visibility="Collapsed">
+                    <WrapPanel x:Name="wpVencidos"/>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
         <!-- Área inferior: gráfico de ingresos y actividad reciente -->
-        <Grid Grid.Row="2" Margin="0,20,0,0">
+        <Grid Grid.Row="3" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="300"/>

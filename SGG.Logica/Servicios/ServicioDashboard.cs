@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SGG.Datos.Repositorios;
+using SGG.Dominio.Entidades;
 
 namespace SGG.Logica.Servicios
 {
@@ -29,6 +30,12 @@ namespace SGG.Logica.Servicios
         public int ObtenerCantidadMembresiasPorVencer()
         {
             return _membresiaRepositorio.ContarPorVencer(30);
+        }
+
+        /// <summary>Socios activos con la cuota ya vencida, del más atrasado al más reciente.</summary>
+        public List<Socio> ObtenerSociosVencidos()
+        {
+            return _socioRepositorio.ObtenerVencidos();
         }
 
         public int ObtenerCantidadUsuarios()
