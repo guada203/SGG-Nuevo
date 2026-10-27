@@ -40,7 +40,7 @@
   - El DNI es inalterable en la edición (RF-02) y editar los datos **no** toca el vencimiento ni la fecha de alta del socio.
   - Si el DNI ya existe pero el socio está **inactivo**, se ofrece reactivarlo en lugar de registrarlo de nuevo.
   - Un socio recién dado de alta queda **sin vencimiento** hasta que registre su primer pago (el pago es el que fija el vencimiento). Hasta entonces figura como `Sin cuota`.
-  - ⚠️ El combo de **entrenador** de esta pantalla quedó **deshabilitado** con un aviso: se muestra la lista real de entrenadores, pero la asignación todavía no se puede guardar porque falta la columna `Socios.EntrenadorId` (ver sección 5).
+  - El combo de **entrenador** está conectado: se llena con los usuarios activos de rol `Entrenador` y la asignación se guarda en `Socios.EntrenadorId` (script `07`). Es opcional: un socio puede quedar sin entrenador asignado.
 - [x] **RegistrarPago** (`RegistrarPago.xaml.cs`): registro real de pagos implementado — `ServicioPagos` + `PagoRepositorio.Agregar` + comprobante imprimible.
   - [x] Renovación de cuota: al registrar el pago se extiende el vencimiento del socio por exactamente un mes (se apila sobre el vencimiento actual si todavía está vigente; si ya venció, se cuenta desde hoy) y el comprobante muestra el nuevo vencimiento. Modelo elegido (Opción B): el vencimiento vive en `Socio`; `Membresia` queda como catálogo de planes.
 - [x] **ControlAsistencia** (`ControlAsistencia.xaml.cs`): conectado a la base real con `AsistenciaRepositorio` + `ServicioAsistencias`. Registra el ingreso en `Asistencias`, bloquea el ingreso si la cuota está vencida o el socio dado de baja (RF-08/RF-09), y muestra el historial por socio y el estado de cuota (Vencida / Al día) calculado desde `Socio.FechaVencimiento`.
@@ -73,7 +73,7 @@
 
 ## 5. Base de datos — esquema y decisiones pendientes
 
-- [ ] **`Socios.EntrenadorId`** (FK → `Usuarios.Id`): sin esto no existen "Mis Alumnos" ni la asignación socio→entrenador en BD. Es migración. Hoy el combo de entrenador de `AltaSocio` está deshabilitado y con aviso por este motivo: se elige visualmente pero no se persiste. (Ojo: "Mis Alumnos" es del perfil Entrenador, que está fuera de alcance; ver sección 4.)
+- [x] **`Socios.EntrenadorId`** (FK → `Usuarios.Id`): implementado en el script `07_AgregarEntrenadorASocios.sql` (columna nullable, FK sin cascada e índice `IX_Socios_EntrenadorId`). El combo de entrenador de `AltaSocio` ya persiste la selección y la preselecciona al editar. (Ojo: "Mis Alumnos" es del perfil Entrenador, fuera de alcance; la columna ya la destraba, pero esa ventana sigue leyendo el demo hasta que se conecte.)
 - [x] **Historial de membresías (decisión resuelta)**: se adoptó la **Opción B**: `Membresia` queda como **catálogo de planes** y la fecha de vencimiento de la cuota vive en `Socio` (`Socios.FechaVencimiento`), una por socio. La renovación apila un mes sobre el vencimiento vigente (o cuenta desde hoy si ya venció). Implementado en el script `04_MoverVencimientoASocio.sql`. La Opción A (`Membresias` en 1:N con `SocioId`, una fila por período) queda descartada para esta entrega: aportaría historial de períodos, que hoy no es un requerimiento de la UI.
 - [ ] **Tabla `Rutinas`**: faltan columnas que la UI ya muestra — `Estado`, `DuracionSemanas`, `FrecuenciaSemanal`, `Nivel`, `Objetivo`. Verificar también `Ejercicio`. Es migración.
 - [x] **`Socios.FechaAlta`**: implementado en el script `04_MoverVencimientoASocio.sql`. "Nuevos socios del mes" ahora usa la fecha de alta propia del socio (`SocioRepositorio.ContarNuevosDelMes`), no la fecha de inicio de la membresía.
@@ -84,13 +84,13 @@
 
 ## 6. Orden de trabajo sugerido
 
-1. Migraciones de esquema pendientes (`Socios.EntrenadorId`, columnas de `Rutinas`). El vencimiento por socio y `Socios.FechaAlta` ya se resolvieron en el script 04.
+1. Migraciones de esquema: `Rutinas` (script 05), `Ejercicios` (script 06) y `Socios.EntrenadorId` (script 07) ya están resueltas. El vencimiento por socio y `Socios.FechaAlta` se resolvieron en el 04. No quedan migraciones propias pendientes.
 2. Repositorios faltantes: `RutinaRepositorio`, `EjercicioRepositorio` (`AsistenciaRepositorio` ya existe).
 3. Servicios faltantes: `ServicioRutinas` (`ServicioPagos` y `ServicioAsistencias` ya existen).
 4. ~~Conectar Recepcionista: panel de inicio, gestión de socios y alta de socio.~~ ✅ Hecho (asistencia y pago ya estaban conectados). El perfil Recepcionista no tiene pantallas con datos demo.
 5. ~~Conectar Reportes de Admin + limpiar simulaciones del dashboard (`PanelInicioAdmin`).~~ ✅ Hecho.
 6. ~~Conectar Entrenador (rutinas, ejercicios, mis alumnos, panel).~~ ⛔ Fuera de alcance: lo hace otra persona del equipo.
-7. Habilitar el combo de entrenador de `AltaSocio` (requiere la migración `Socios.EntrenadorId`).
+7. ~~Habilitar el combo de entrenador de `AltaSocio` (requiere la migración `Socios.EntrenadorId`).~~ ✅ Hecho: script `07` + cableado en dominio, repositorio, servicio y formulario.
 
 > Nota: Recepcionista y Admin ya leen datos reales. Los nombres demo (Ana García, Martín López, etc.) solo siguen apareciendo en la ventana "Mis Alumnos" del perfil Entrenador, fuera de alcance (sección 4).
 
@@ -111,11 +111,16 @@ Pasos para dejar el sistema funcionando en una máquina distinta a la de desarro
 
 3. **Crear la base `SGG`.** El `CREATE DATABASE SGG;` está comentado al inicio de `SGG.Datos/Scripts/01_EsquemaBase.sql`. Descomentarlo (junto con el `GO` siguiente) o crear la base a mano desde SSMS.
 
-4. **Ejecutar los scripts en orden (01 → 02 → 03 → 04)** desde SSMS, conectado a la instancia local:
+4. **Ejecutar los scripts en orden (01 → 07)** desde SSMS, conectado a la instancia local:
    - `SGG.Datos/Scripts/01_EsquemaBase.sql` — esquema de tablas.
    - `SGG.Datos/Scripts/02_DatosPrueba.sql` — datos de prueba (usuarios, socios, membresías, pagos).
    - `SGG.Datos/Scripts/03_MigrarNormalizarUsuarioRol.sql` — **obligatorio**: sin él el login falla porque EF espera `Usuarios.RolId` y la tabla `Roles`.
    - `SGG.Datos/Scripts/04_MoverVencimientoASocio.sql` — **obligatorio**: agrega `FechaAlta` y `FechaVencimiento` a `Socios` (el vencimiento pasa a ser del socio, no del plan) y migra los datos actuales.
+   - `SGG.Datos/Scripts/05_ActualizarRutinas.sql` — **obligatorio**: agrega `Objetivo`, `DuracionSemanas`, `FrecuenciaSemanal`, `Nivel`, `Estado` y `Notas` a `Rutinas`.
+   - `SGG.Datos/Scripts/06_CrearEjercicios.sql` — **obligatorio**: crea la tabla `Ejercicios` con FK a `Rutinas`.
+   - `SGG.Datos/Scripts/07_AgregarEntrenadorASocios.sql` — **obligatorio**: agrega `Socios.EntrenadorId` (FK a `Usuarios`) e índice, para asignar entrenador a cada socio.
+
+   Los scripts 04 a 07 son re-ejecutables (tienen guardas `IF`). Los scripts 01, 02 y 03 **no**: se corren una sola vez (el 02 duplicaría datos y el 03 falla porque ya eliminó la columna `Rol`).
 
 5. **Configurar la conexión sin tocar código.** Crear el archivo `SGG.Datos\appsettings.local.json` con su instancia local, por ejemplo:
    ```json

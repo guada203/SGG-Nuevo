@@ -35,12 +35,6 @@ namespace SGG.Formularios.Recepcionista
             CargarMembresias();
             CargarEntrenadores();
 
-            // La asignación de entrenador todavía no se puede persistir: falta la columna
-            // Socios.EntrenadorId en la base. Se muestra la lista real pero queda deshabilitada
-            // para no dar a entender que la selección se guarda.
-            cmbEntrenador.IsEnabled = false;
-            cmbEntrenador.ToolTip = "Pendiente: la asignación de entrenador se guardará cuando la base incorpore la columna correspondiente.";
-
             if (_socioExistente != null)
                 PrepararEdicion();
             else if (_planes.Count > 0)
@@ -108,8 +102,11 @@ namespace SGG.Formularios.Recepcionista
             else if (_planes.Count > 0)
                 cmbMembresia.SelectedIndex = 0;
 
-            // La asignación de entrenador no se persiste todavía: queda sin preselección.
-            cmbEntrenador.SelectedIndex = -1;
+            // Entrenador a cargo (opcional): preseleccionar el asignado, si hay.
+            if (s.EntrenadorId is int entrenadorId)
+                cmbEntrenador.SelectedValue = entrenadorId;
+            else
+                cmbEntrenador.SelectedIndex = -1;
         }
 
         private void btnRegistrar_Click(object sender, RoutedEventArgs e)
@@ -155,9 +152,11 @@ namespace SGG.Formularios.Recepcionista
                 return;
             }
 
+            int? entrenadorId = (cmbEntrenador.SelectedItem as EntrenadorItem)?.Id;
+
             if (_socioExistente != null)
             {
-                GuardarCambios(nombre, apellido, fechaNacimiento, telefono, email, plan);
+                GuardarCambios(nombre, apellido, fechaNacimiento, telefono, email, plan, entrenadorId);
                 return;
             }
 
@@ -203,7 +202,7 @@ namespace SGG.Formularios.Recepcionista
             }
 
             var (exitoso, mensaje) = _servicioSocios.AltaSocio(
-                nombre, apellido, dni, fechaNacimiento, telefono, email, plan.Id);
+                nombre, apellido, dni, fechaNacimiento, telefono, email, plan.Id, entrenadorId);
 
             if (!exitoso)
             {
@@ -216,10 +215,10 @@ namespace SGG.Formularios.Recepcionista
         }
 
         private void GuardarCambios(string nombre, string apellido, DateTime fechaNacimiento,
-                                    string telefono, string email, MembresiaItem plan)
+                                    string telefono, string email, MembresiaItem plan, int? entrenadorId)
         {
             var (exitoso, mensaje) = _servicioSocios.EditarSocio(
-                _socioExistente!.Id, nombre, apellido, fechaNacimiento, telefono, email, plan.Id);
+                _socioExistente!.Id, nombre, apellido, fechaNacimiento, telefono, email, plan.Id, entrenadorId);
 
             if (!exitoso)
             {

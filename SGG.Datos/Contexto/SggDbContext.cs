@@ -66,6 +66,15 @@ namespace SGG.Datos.Contexto
                 .Property(s => s.FechaVencimiento)
                 .HasColumnType("date");
 
+            // Entrenador a cargo del socio: relación opcional hacia Usuarios.
+            // Sin borrado en cascada a propósito: las bajas de usuarios son lógicas
+            // (Activo = 0), nunca se elimina la fila.
+            modelBuilder.Entity<Socio>()
+                .HasOne(s => s.Entrenador)
+                .WithMany()
+                .HasForeignKey(s => s.EntrenadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             // Relación: una rutina contiene varios ejercicios.
             // Cada ejercicio pertenece a una rutina mediante RutinaId.

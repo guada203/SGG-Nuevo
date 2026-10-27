@@ -24,6 +24,11 @@ namespace SGG.Dominio.Entidades
         public int MembresiaId { get; set; }
         public Membresia? Membresia { get; set; }
 
+        // Entrenador a cargo del socio (opcional). Es un Usuario con rol "Entrenador";
+        // la base no valida el rol, lo controla la aplicación al cargar el combo.
+        public int? EntrenadorId { get; set; }
+        public Usuario? Entrenador { get; set; }
+
         // Relaciones inversas (un socio tiene varios pagos, asistencias, rutinas)
         public List<Pago> Pagos { get; set; } = new();
         public List<Asistencia> Asistencias { get; set; } = new();

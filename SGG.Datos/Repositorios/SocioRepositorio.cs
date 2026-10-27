@@ -14,6 +14,7 @@ namespace SGG.Datos.Repositorios
             using var contexto = new SggDbContext();
             return contexto.Socios
                 .Include(s => s.Membresia)
+                .Include(s => s.Entrenador)
                 .ToList();
         }
 
@@ -22,6 +23,7 @@ namespace SGG.Datos.Repositorios
             using var contexto = new SggDbContext();
             return contexto.Socios
                 .Include(s => s.Membresia)
+                .Include(s => s.Entrenador)
                 .FirstOrDefault(s => s.Id == id);
         }
 
@@ -83,6 +85,7 @@ namespace SGG.Datos.Repositorios
             socioDb.MembresiaId = socio.MembresiaId;
             socioDb.FechaAlta = socio.FechaAlta;
             socioDb.FechaVencimiento = socio.FechaVencimiento;
+            socioDb.EntrenadorId = socio.EntrenadorId;
 
             contexto.SaveChanges();
         }
