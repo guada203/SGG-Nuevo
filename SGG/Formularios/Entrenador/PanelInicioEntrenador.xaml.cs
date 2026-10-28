@@ -87,6 +87,9 @@ namespace SGG.Formularios.Entrenador
             var gestionRutinas = new VentanaGestionRutinas();
             gestionRutinas.Owner = Window.GetWindow(this);
             gestionRutinas.ShowDialog();
+
+            // Recargar las estadísticas al cerrar la ventana.
+            CargarDatosDePrueba();
         }
 
         private void btnAsignarDesdeInicio_Click(object sender, RoutedEventArgs e)
@@ -99,6 +102,9 @@ namespace SGG.Formularios.Entrenador
                 var elegir = new VentanaElegirRutina(socio.SocioId);
                 elegir.Owner = Window.GetWindow(this);
                 elegir.ShowDialog();
+
+                // Actualizar estadísticas y listas al cerrar la ventana.
+                CargarDatosDePrueba();
             }
         }
     }

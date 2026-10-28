@@ -80,6 +80,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Rutinas Recientes" 
                                FontSize="14" FontWeight="Bold" Foreground="White" Margin="0,0,0,12"/>
+					<Grid>
                     <DataGrid x:Name="dgRutinasRecientes" AutoGenerateColumns="False" 
                               Background="#1A1A1A" Foreground="White" BorderThickness="0"
                               RowBackground="#1A1A1A" AlternatingRowBackground="#222222"
@@ -92,7 +93,28 @@
                             <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="90"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                </DockPanel>
+
+						<TextBlock Text="Todavía no hay rutinas recientes"
+								   Foreground="#888888"
+								   FontSize="12"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   IsHitTestVisible="False">
+							<TextBlock.Style>
+								<Style TargetType="TextBlock">
+									<Setter Property="Visibility" Value="Collapsed"/>
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding HasItems, ElementName=dgRutinasRecientes}"
+													 Value="False">
+											<Setter Property="Visibility" Value="Visible"/>
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</TextBlock.Style>
+						</TextBlock>
+					</Grid>
+
+				</DockPanel>
             </Border>
 
             <!-- Socios sin rutina -->
@@ -101,6 +123,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Socios sin Rutina" 
                                FontSize="14" FontWeight="Bold" Foreground="White" Margin="0,0,0,12"/>
+					<Grid>
                     <ItemsControl x:Name="icSociosSinRutina">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -122,7 +145,28 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </DockPanel>
+
+						<TextBlock Text="No hay socios pendientes de rutina"
+								   Foreground="#888888"
+								   FontSize="12"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   IsHitTestVisible="False">
+							<TextBlock.Style>
+								<Style TargetType="TextBlock">
+									<Setter Property="Visibility" Value="Collapsed"/>
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding HasItems, ElementName=icSociosSinRutina}"
+													 Value="False">
+											<Setter Property="Visibility" Value="Visible"/>
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</TextBlock.Style>
+						</TextBlock>
+					</Grid>
+
+				</DockPanel>
             </Border>
 
         </Grid>
