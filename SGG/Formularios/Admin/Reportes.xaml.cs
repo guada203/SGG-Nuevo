@@ -14,7 +14,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
 using SGG.Controles;
-using SGG.Formularios.Recepcionista;
+using SGG.Dominio.Entidades;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Admin
 {
@@ -22,13 +23,20 @@ namespace SGG.Formularios.Admin
     {
         private string _reporteActual = "pagos";
         private List<ReportePagoVista> _pagosActuales = new();
-        private List<ReporteAsistenciaVista> _asistenciasActuales = new();
+        private List<Asistencia> _asistenciasActuales = new();
         private List<ReporteAsistenciaSocioVista> _asistenciasSocios = new();
         private ReporteAsistenciaSocioVista? _asistenciaDetalle; // null = modo lista, no null = modo detalle
         private List<ReporteSocioVista> _sociosActuales = new();
-        private List<SocioDemo> _sociosDemo = DatosRecepDemo.ObtenerSocios();
         private ListCollectionView _vistaPagosActual;
         private string _textoBuscarPagos = string.Empty;
+
+        private readonly ServicioReportes _servicioReportes = new();
+        private readonly ServicioPagos _servicioPagos = new();
+        private readonly ServicioAsistencias _servicioAsistencias = new();
+
+        // Socios reales indexados por Id. Los pagos incluyen su Socio pero no la
+        // Membresía, así que el DNI y la actividad se resuelven con este diccionario.
+        private readonly Dictionary<int, Socio> _sociosPorId = new();
 
         public Reportes()
         {
@@ -67,21 +75,42 @@ namespace SGG.Formularios.Admin
             activa.Foreground = System.Windows.Media.Brushes.Black;
         }
 
-        // ---------- Datos de ejemplo por reporte (RF-14, RF-15, RF-16) ----------
+        // ---------- Datos reales por reporte (RF-14, RF-15, RF-16) ----------
+
+        // Carga los socios reales y los indexa por Id para resolver nombre, DNI y
+        // actividad sin volver a consultar la base por cada fila.
+        private List<Socio> CargarSocios()
+        {
+            var socios = _servicioReportes.ObtenerTodosLosSocios();
+            _sociosPorId.Clear();
+            foreach (var socio in socios)
+                _sociosPorId[socio.Id] = socio;
+            return socios;
+        }
+
+        private static string NombreDeSocio(Socio socio) => $"{socio.Nombre} {socio.Apellido}".Trim();
 
         private void MostrarReportePagos()
         {
-            // TODO: reemplazar por datos reales desde SGG.Logica
             _reporteActual = "pagos";
-            _pagosActuales = DatosRecepDemo.ObtenerPagos()
-                .Select(p => new ReportePagoVista
+
+            // El pago trae su Socio (para el nombre) pero no la Membresía, por eso
+            // el DNI y la actividad se resuelven contra el diccionario de socios.
+            CargarSocios();
+
+            _pagosActuales = _servicioPagos.ObtenerTodos()
+                .Select(p =>
                 {
-                    Socio = p.SocioNombre,
-                    Dni = _sociosDemo.FirstOrDefault(s => s.NombreCompleto == p.SocioNombre)?.Dni ?? string.Empty,
-                    Monto = p.Monto,
-                    Fecha = p.Fecha,
-                    Metodo = p.Metodo,
-                    Actividad = _sociosDemo.FirstOrDefault(s => s.NombreCompleto == p.SocioNombre)?.TipoMembresia ?? string.Empty
+                    _sociosPorId.TryGetValue(p.SocioId, out var socio);
+                    return new ReportePagoVista
+                    {
+                        Socio = socio != null ? NombreDeSocio(socio) : "Socio desconocido",
+                        Dni = socio?.Dni ?? string.Empty,
+                        Monto = p.Monto,
+                        Fecha = p.FechaPago,
+                        Metodo = p.MetodoPago,
+                        Actividad = socio?.Membresia?.TipoActividad.ToString() ?? "Sin plan"
+                    };
                 })
                 .ToList();
 
@@ -107,22 +136,25 @@ namespace SGG.Formularios.Admin
 
         private void MostrarReporteAsistencias()
         {
-            // TODO: reemplazar por datos reales desde SGG.Logica
             _reporteActual = "asistencias";
 
-            // Asistencias crudas desde los datos demo (una fila por registro de ingreso).
-            _asistenciasActuales = DatosRecepDemo.ObtenerAsistencias()
-                .Select(a => new ReporteAsistenciaVista { Socio = a.SocioNombre, FechaHora = a.FechaHora })
-                .ToList();
+            // Asistencias reales de la base (una fila por registro de ingreso).
+            _asistenciasActuales = _servicioAsistencias.ObtenerTodos();
 
-            // Vista por socio: agrupa los registros y calcula total y última visita.
+            // Vista por socio: agrupa por Id (no por nombre) para no fusionar
+            // socios distintos que comparten el mismo nombre. Calcula total y última visita.
             _asistenciasSocios = _asistenciasActuales
-                .GroupBy(a => a.Socio)
-                .Select(g => new ReporteAsistenciaSocioVista
+                .GroupBy(a => a.SocioId)
+                .Select(g =>
                 {
-                    Socio = g.Key,
-                    Total = g.Count(),
-                    UltimaVisita = g.Max(a => a.FechaHora)
+                    var nombre = g.First().Socio is { } socio ? NombreDeSocio(socio) : "Socio desconocido";
+                    return new ReporteAsistenciaSocioVista
+                    {
+                        SocioId = g.Key,
+                        Socio = nombre,
+                        Total = g.Count(),
+                        UltimaVisita = g.Max(a => a.FechaHoraIngreso)
+                    };
                 })
                 .OrderByDescending(s => s.Total)
                 .ThenBy(s => s.Socio)
@@ -156,9 +188,15 @@ namespace SGG.Formularios.Admin
         {
             _asistenciaDetalle = socio;
 
+            // Se filtra por SocioId para no mezclar socios distintos con igual nombre.
             var historial = _asistenciasActuales
-                .Where(a => a.Socio == socio.Socio)
-                .OrderByDescending(a => a.FechaHora)
+                .Where(a => a.SocioId == socio.SocioId)
+                .OrderByDescending(a => a.FechaHoraIngreso)
+                .Select(a => new ReporteAsistenciaVista
+                {
+                    Socio = a.Socio is { } s ? NombreDeSocio(s) : "Socio desconocido",
+                    FechaHora = a.FechaHoraIngreso
+                })
                 .ToList();
 
             dgReporte.Columns.Clear();
@@ -206,17 +244,15 @@ namespace SGG.Formularios.Admin
 
         private void MostrarReporteSocios()
         {
-            // TODO: reemplazar por datos reales desde SGG.Logica
             _reporteActual = "socios";
 
-            // Socios desde los datos demo: los mismos nombres que el resto del sistema
-            // (GestionSocios, ControlAsistencia, etc.) para que el reporte sea coherente.
-            _sociosActuales = DatosRecepDemo.ObtenerSocios()
+            // Socios reales de la base (los mismos que indexa el diccionario de pagos).
+            _sociosActuales = CargarSocios()
                 .Select(s => new ReporteSocioVista
                 {
-                    Nombre = s.NombreCompleto,
+                    Nombre = NombreDeSocio(s),
                     Estado = s.Activo ? "Activo" : "Inactivo",
-                    Membresia = s.TipoMembresia,
+                    Membresia = s.Membresia?.TipoActividad.ToString() ?? "Sin plan",
                     FechaVencimiento = s.FechaVencimiento
                 })
                 .OrderBy(s => s.Nombre)
@@ -226,7 +262,6 @@ namespace SGG.Formularios.Admin
             dgReporte.Columns.Add(CrearColumnaTexto("Nombre", "Nombre"));
             dgReporte.Columns.Add(CrearColumnaTexto("Estado", "Estado"));
             dgReporte.Columns.Add(CrearColumnaTexto("Membresía", "Membresia"));
-            dgReporte.Columns.Add(CrearColumnaTexto("Vencimiento", "FechaVencimiento", "{0:dd/MM/yyyy}"));
 
             dgReporte.ItemsSource = _sociosActuales;
             txtResumen.Text = ObtenerTextoResumen();
@@ -325,9 +360,13 @@ namespace SGG.Formularios.Admin
                     if (_asistenciaDetalle != null)
                     {
                         var filasHistorial = _asistenciasActuales
-                            .Where(a => a.Socio == _asistenciaDetalle.Socio)
-                            .OrderByDescending(a => a.FechaHora)
-                            .Select(a => new[] { a.Socio, a.FechaHora.ToString("dd/MM/yyyy HH:mm") })
+                            .Where(a => a.SocioId == _asistenciaDetalle.SocioId)
+                            .OrderByDescending(a => a.FechaHoraIngreso)
+                            .Select(a => new[]
+                            {
+                                a.Socio is { } s ? NombreDeSocio(s) : "Socio desconocido",
+                                a.FechaHoraIngreso.ToString("dd/MM/yyyy HH:mm")
+                            })
                             .ToList();
                         return (new[] { "Socio", "FechaHora" }, filasHistorial);
                     }
@@ -401,6 +440,28 @@ namespace SGG.Formularios.Admin
                     .OrderByDescending(i => i.Valor)
                     .ToList()
             );
+
+            // Cuotas: pagadas vs vencidas (conteo)
+            var hoy = DateTime.Today;
+            int cuotasPagadas = PagosVisibles.Count;
+            int cuotasVencidas = 0;
+            if (_sociosPorId.Count > 0)
+            {
+                cuotasVencidas = _sociosPorId.Values.Count(s =>
+                    s.Activo &&
+                    s.FechaVencimiento.HasValue &&
+                    s.FechaVencimiento.Value.Date < hoy);
+            }
+
+            var datosCuotas = new List<GraficoTortaItem>();
+            if (cuotasPagadas > 0)
+                datosCuotas.Add(new GraficoTortaItem { Etiqueta = "Pagadas", Valor = cuotasPagadas, ColorHex = "#C5FF00" });
+            if (cuotasVencidas > 0)
+                datosCuotas.Add(new GraficoTortaItem { Etiqueta = "Vencidas", Valor = cuotasVencidas, ColorHex = "#FF5555" });
+            if (datosCuotas.Count == 0)
+                datosCuotas.Add(new GraficoTortaItem { Etiqueta = "Sin datos", Valor = 1, ColorHex = "#666666" });
+
+            tortaCuotas.SetDatos(datosCuotas);
         }
 
         private void MostrarTortasSocios()
@@ -563,6 +624,7 @@ namespace SGG.Formularios.Admin
 
     public class ReporteAsistenciaSocioVista
     {
+        public int SocioId { get; set; }
         public string Socio { get; set; } = string.Empty;
         public int Total { get; set; }
         public DateTime UltimaVisita { get; set; }

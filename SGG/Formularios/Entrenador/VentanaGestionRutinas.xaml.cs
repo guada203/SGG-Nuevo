@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using SGG.Dominio.Entidades;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Entrenador
 {
@@ -21,6 +22,9 @@ namespace SGG.Formularios.Entrenador
 
         private bool _modoEdicion = false;
         private int _rutinaIdEnEdicion = 0;
+
+        private readonly ServicioSocios _servicioSocios = new();
+        private readonly ServicioRutinas _servicioRutinas = new();
 
         public VentanaGestionRutinas()
         {
@@ -38,6 +42,40 @@ namespace SGG.Formularios.Entrenador
         {
             _modoEdicion = true;
             _rutinaIdEnEdicion = rutinaAEditar.Id;
+
+            // Buscamos la rutina completa en SQL Server.
+            var rutinaDb = _servicioRutinas.ObtenerPorId(_rutinaIdEnEdicion);
+
+            if (rutinaDb == null)
+            {
+                MessageBox.Show(
+                    "No se encontró la rutina.",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return;
+            }
+
+            // Cargamos las notas guardadas.
+            txtNotas.Text = rutinaDb.Notas;
+
+            // Limpiamos la lista antes de cargar los ejercicios.
+            Ejercicios.Clear();
+
+            // Convertimos los ejercicios de SQL Server
+            // en elementos que puede mostrar nuestra ventana.
+            foreach (var ejercicio in rutinaDb.Ejercicios)
+            {
+                Ejercicios.Add(new EjercicioItem
+                {
+                    Nombre = ejercicio.Nombre,
+                    GrupoMuscular = ejercicio.GrupoMuscular,
+                    Series = ejercicio.Series,
+                    Repeticiones = ejercicio.Repeticiones,
+                    DescansoSegundos = ejercicio.DescansoSegundos
+                });
+            }
 
             txtNombre.Text = rutinaAEditar.Nombre;
             txtObjetivo.Text = rutinaAEditar.Objetivo;
@@ -64,26 +102,46 @@ namespace SGG.Formularios.Entrenador
             SeleccionarFrecuencia(plantilla.FrecuenciaSemanal);
             SeleccionarNivel(plantilla.Nivel);
 
+            // Buscamos la rutina original con todos sus ejercicios.
+            var rutinaOriginal = _servicioRutinas.ObtenerPorId(plantilla.Id);
+
+            if (rutinaOriginal != null)
+            {
+                // Copiamos las notas de la rutina original.
+                txtNotas.Text = rutinaOriginal.Notas;
+
+                // Cargamos copias de los ejercicios.
+                Ejercicios.Clear();
+
+                foreach (var ejercicio in rutinaOriginal.Ejercicios)
+                {
+                    Ejercicios.Add(new EjercicioItem
+                    {
+                        Nombre = ejercicio.Nombre,
+                        GrupoMuscular = ejercicio.GrupoMuscular,
+                        Series = ejercicio.Series,
+                        Repeticiones = ejercicio.Repeticiones,
+                        DescansoSegundos = ejercicio.DescansoSegundos
+                    });
+                }
+            }
+
             txtBreadcrumb.Text = "Mis Alumnos  >  Nueva Rutina";
             txtTitulo.Text = $"Nueva Rutina (basada en \"{plantilla.Nombre}\")";
         }
 
         private void InicializarDatos()
         {
-            Ejercicios.Add(new EjercicioItem { Nombre = "Press de Banca", GrupoMuscular = "Pecho", Series = 4, Repeticiones = 12, DescansoSegundos = 90 });
-            Ejercicios.Add(new EjercicioItem { Nombre = "Sentadilla con Barra", GrupoMuscular = "Piernas", Series = 4, Repeticiones = 10, DescansoSegundos = 120 });
-            Ejercicios.Add(new EjercicioItem { Nombre = "Peso Muerto", GrupoMuscular = "Espalda", Series = 3, Repeticiones = 8, DescansoSegundos = 90 });
-            Ejercicios.Add(new EjercicioItem { Nombre = "Dominadas", GrupoMuscular = "Espalda", Series = 3, Repeticiones = 10, DescansoSegundos = 60 });
-
             icEjercicios.ItemsSource = Ejercicios;
 
-            _sociosTodos = new List<SocioComboItem>
-            {
-                new SocioComboItem { Id = 1, NombreCompleto = "Juan Pérez - DNI 40123456" },
-                new SocioComboItem { Id = 2, NombreCompleto = "María Gómez - DNI 38654987" },
-                new SocioComboItem { Id = 3, NombreCompleto = "Lucas Rodríguez - DNI 42987123" }
-            };
-
+            _sociosTodos = _servicioSocios.ObtenerTodos()
+                .Where(s => s.Activo && s.EntrenadorId == Sesion.UsuarioId)
+                .Select(s => new SocioComboItem
+                {
+                    Id = s.Id,
+                    NombreCompleto = $"{s.Nombre} {s.Apellido} - DNI {s.Dni}"
+                })
+                .ToList();
             cmbSocios.ItemsSource = _sociosTodos;
 
             // La "vista" es una capa sobre la lista que permite ocultar elementos
@@ -165,47 +223,127 @@ namespace SGG.Formularios.Entrenador
             }
         }
 
+
         private void btnGuardarRutina_Click(object sender, RoutedEventArgs e)
         {
+            // 1. Comprobamos que el formulario tenga los datos necesarios.
             if (string.IsNullOrWhiteSpace(txtNombre.Text))
             {
-                MessageBox.Show("Por favor, ingresá el nombre de la rutina.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Ingresá el nombre de la rutina.");
                 return;
             }
 
-            if (cmbSocios.SelectedItem == null)
+            if (cmbSocios.SelectedItem is not SocioComboItem socioSeleccionado)
             {
-                MessageBox.Show("Por favor, seleccioná un socio de la lista.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Seleccioná un socio de la lista.");
+                return;
+            }
+            bool sigueAsignado = _servicioSocios.ObtenerTodos()
+                .Any(s => s.Id == socioSeleccionado.Id
+           && s.Activo
+           && s.EntrenadorId == Sesion.UsuarioId);
+
+            if (!sigueAsignado)
+            {
+                MessageBox.Show(
+                    "Este socio ya no está asignado a tu entrenador. No se puede guardar la rutina.",
+                    "Socio no disponible",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
             if (!int.TryParse(txtSemanas.Text, out int semanas) || semanas <= 0)
             {
-                MessageBox.Show("La duración debe ser un número mayor a cero.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("La duración debe ser mayor a cero.");
                 return;
             }
 
             if (Ejercicios.Count == 0)
             {
-                MessageBox.Show("Agregá al menos un ejercicio a la rutina.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Agregá al menos un ejercicio.");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtObjetivo.Text))
+            // 2. Obtenemos los valores seleccionados en el formulario.
+            int frecuencia = cmbFrecuencia.SelectedIndex switch
             {
-                MessageBox.Show("Por favor, ingresá el objetivo de la rutina.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                0 => 2,
+                1 => 3,
+                2 => 4,
+                3 => 5,
+                _ => 3
+            };
+
+            string nivel = rbAvanzado.IsChecked == true ? "Avanzado"
+                         : rbIntermedio.IsChecked == true ? "Intermedio"
+                         : "Principiante";
+
+            string estado = rbCompletada.IsChecked == true
+                ? "Completada"
+                : "Activa";
+
+            // 3. Creamos un objeto Rutina con los datos del formulario.
+            var rutina = new Rutina
+            {
+                Id = _modoEdicion ? _rutinaIdEnEdicion : 0,
+                SocioId = socioSeleccionado.Id,
+                Nombre = txtNombre.Text.Trim(),
+                Objetivo = txtObjetivo.Text.Trim(),
+                DuracionSemanas = semanas,
+                FrecuenciaSemanal = frecuencia,
+                Nivel = nivel,
+                Estado = estado,
+                Notas = txtNotas.Text.Trim(),
+
+                // Convertimos los ejercicios de la ventana
+                // en entidades que Entity Framework puede guardar.
+                Ejercicios = Ejercicios.Select(ejercicio => new Ejercicio
+                {
+                    Nombre = ejercicio.Nombre,
+                    GrupoMuscular = ejercicio.GrupoMuscular,
+                    Series = ejercicio.Series,
+                    Repeticiones = ejercicio.Repeticiones,
+                    DescansoSegundos = ejercicio.DescansoSegundos
+                }).ToList()
+            };
+
+            // 4. Pedimos al servicio que cree o modifique la rutina.
+            try
+            {
+                var resultado = _modoEdicion
+                    ? _servicioRutinas.ModificarRutina(rutina)
+                    : _servicioRutinas.CrearRutina(rutina);
+
+                if (!resultado.Exitoso)
+                {
+                    MessageBox.Show(
+                        resultado.Mensaje,
+                        "Validación",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 5. Cerramos la ventana solamente si se guardó bien.
+                MessageBox.Show(
+                    resultado.Mensaje,
+                    "Éxito",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                DialogResult = true;
             }
-
-            string nombreRutina = txtNombre.Text;
-            string estadoElegido = rbActiva.IsChecked == true ? "Activa" : "Completada";
-            string mensaje = _modoEdicion
-    ? $"Rutina '{nombreRutina}' actualizada correctamente. Estado: {estadoElegido} (simulado)."
-    : $"Rutina '{nombreRutina}' creada correctamente con {Ejercicios.Count} ejercicios. Estado: {estadoElegido} (simulado).";
-
-            MessageBox.Show(mensaje, "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-            this.Close();
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"No se pudo guardar la rutina.\n\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
+
 
         private void btnCancelar_Click(object sender, RoutedEventArgs e)
         {

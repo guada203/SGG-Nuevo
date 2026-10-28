@@ -1,23 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
+using SGG.Dominio.Entidades;
 using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Recepcionista
 {
     public partial class AltaSocio : Window
     {
-        // Planes ficticios de membresía (RF-01).
-        // TODO integración BD: reemplazar por ServicioMembresias.ObtenerVigentes() (SGG.Logica / SGG.Datos).
-        private static readonly List<MembresiaItem> Planes = new()
-        {
-            new MembresiaItem { Id = 1, Nombre = "Musculación", Precio = 18000m, DuracionDias = 30, Descripcion = "Musculación - $18.000 (30 días)" },
-            new MembresiaItem { Id = 2, Nombre = "Funcional",   Precio = 15000m, DuracionDias = 30, Descripcion = "Funcional - $15.000 (30 días)" },
-            new MembresiaItem { Id = 3, Nombre = "Combinado",   Precio = 22000m, DuracionDias = 30, Descripcion = "Combinado - $22.000 (30 días)" }
-        };
+        private readonly ServicioSocios _servicioSocios = new();
+        private readonly ServicioMembresias _servicioMembresias = new();
+        private List<MembresiaItem> _planes = new();
 
-        private readonly SocioDemo? _socioExistente;
+        private readonly Socio? _socioExistente;
 
         /// <summary>Modo alta.</summary>
         public AltaSocio() : this(null)
@@ -25,7 +22,7 @@ namespace SGG.Formularios.Recepcionista
         }
 
         /// <summary>Modo edición (RF-02): recibe el socio existente para precargar el formulario.</summary>
-        public AltaSocio(SocioDemo? socioExistente)
+        public AltaSocio(Socio? socioExistente)
         {
             InitializeComponent();
             _socioExistente = socioExistente;
@@ -40,13 +37,24 @@ namespace SGG.Formularios.Recepcionista
 
             if (_socioExistente != null)
                 PrepararEdicion();
-            else if (Planes.Count > 0)
+            else if (_planes.Count > 0)
                 cmbMembresia.SelectedIndex = 0;
         }
 
         private void CargarMembresias()
         {
-            cmbMembresia.ItemsSource = Planes;
+            // Los planes ahora son el catálogo real: membresías vigentes de la base.
+            _planes = _servicioMembresias.ObtenerVigentes()
+                .Select(m => new MembresiaItem
+                {
+                    Id = m.Id,
+                    Nombre = m.TipoActividad.ToString(),
+                    Precio = m.Precio,
+                    Descripcion = $"{m.TipoActividad} — {m.Precio.ToString("C0", new CultureInfo("es-AR"))}"
+                })
+                .ToList();
+
+            cmbMembresia.ItemsSource = _planes;
         }
 
         /// <summary>
@@ -88,15 +96,15 @@ namespace SGG.Formularios.Recepcionista
             txtTelefono.Text = s.Telefono;
             txtEmail.Text = s.Email;
 
-            var planActual = Planes.FirstOrDefault(p => p.Nombre == s.TipoMembresia);
+            var planActual = _planes.FirstOrDefault(p => p.Id == s.MembresiaId);
             if (planActual != null)
                 cmbMembresia.SelectedItem = planActual;
-            else if (Planes.Count > 0)
+            else if (_planes.Count > 0)
                 cmbMembresia.SelectedIndex = 0;
 
-            // Entrenador a cargo (si el socio tiene uno asignado).
-            if (s.EntrenadorId.HasValue && cmbEntrenador.ItemsSource is IEnumerable<EntrenadorItem> entrenadores)
-                cmbEntrenador.SelectedItem = entrenadores.FirstOrDefault(x => x.Id == s.EntrenadorId.Value);
+            // Entrenador a cargo (opcional): preseleccionar el asignado, si hay.
+            if (s.EntrenadorId is int entrenadorId)
+                cmbEntrenador.SelectedValue = entrenadorId;
             else
                 cmbEntrenador.SelectedIndex = -1;
         }
@@ -144,17 +152,19 @@ namespace SGG.Formularios.Recepcionista
                 return;
             }
 
+            int? entrenadorId = (cmbEntrenador.SelectedItem as EntrenadorItem)?.Id;
+
             if (_socioExistente != null)
             {
-                GuardarCambios(nombre, apellido, fechaNacimiento, telefono, email, plan);
+                GuardarCambios(nombre, apellido, fechaNacimiento, telefono, email, plan, entrenadorId);
                 return;
             }
 
-            // RF-01 (alta): el DNI no se puede repetir contra el padrón demo.
+            // RF-01 (alta): el DNI no se puede repetir contra el padrón real.
             // Si el DNI ya existe pero el socio está inactivo, se ofrece reactivarlo
             // en lugar de volver a registrarlo (los datos ya están en el sistema).
-            var existente = DatosRecepDemo.Socios.FirstOrDefault(s =>
-                s.Dni.Equals(dni, StringComparison.OrdinalIgnoreCase));
+            var existente = _servicioSocios.ObtenerTodos()
+                .FirstOrDefault(s => s.Dni.Equals(dni, StringComparison.OrdinalIgnoreCase));
 
             if (existente != null)
             {
@@ -165,7 +175,7 @@ namespace SGG.Formularios.Recepcionista
                 }
 
                 var confirmar = MessageBox.Show(
-                    $"Ya existe un socio con el DNI {dni} ({existente.NombreCompleto}) y está INACTIVO.\n\n" +
+                    $"Ya existe un socio con el DNI {dni} ({existente.Nombre} {existente.Apellido}) y está INACTIVO.\n\n" +
                     "¿Querés reactivarlo en lugar de registrarlo de nuevo?",
                     "Socio existente",
                     MessageBoxButton.YesNo,
@@ -173,7 +183,13 @@ namespace SGG.Formularios.Recepcionista
 
                 if (confirmar == MessageBoxResult.Yes)
                 {
-                    existente.Activo = true;
+                    var (reactivado, mensajeReactivacion) = _servicioSocios.Reactivar(existente.Id);
+                    if (!reactivado)
+                    {
+                        MostrarError(mensajeReactivacion);
+                        return;
+                    }
+
                     DialogResult = true;
                     Close();
                 }
@@ -185,60 +201,30 @@ namespace SGG.Formularios.Recepcionista
                 return;
             }
 
-            var nuevo = new SocioDemo
-            {
-                Id = DatosRecepDemo.Socios.Count > 0 ? DatosRecepDemo.Socios.Max(s => s.Id) + 1 : 1,
-                Nombre = nombre,
-                Apellido = apellido,
-                Dni = dni,
-                FechaNacimiento = fechaNacimiento,
-                Telefono = telefono,
-                Email = email,
-                Activo = true,
-                EntrenadorId = (cmbEntrenador.SelectedItem as EntrenadorItem)?.Id,
-                TipoMembresia = plan.Nombre,
-                Precio = plan.Precio,
-                FechaInicio = DateTime.Today,
-                FechaVencimiento = DateTime.Today.AddDays(plan.DuracionDias),
-                UltimoPagoMonto = null,
-                UltimoPagoFecha = null
-            };
+            var (exitoso, mensaje) = _servicioSocios.AltaSocio(
+                nombre, apellido, dni, fechaNacimiento, telefono, email, plan.Id, entrenadorId);
 
-            DatosRecepDemo.Socios.Add(nuevo);
+            if (!exitoso)
+            {
+                MostrarError(mensaje);
+                return;
+            }
 
             DialogResult = true;
             Close();
         }
 
         private void GuardarCambios(string nombre, string apellido, DateTime fechaNacimiento,
-                                    string telefono, string email, MembresiaItem plan)
+                                    string telefono, string email, MembresiaItem plan, int? entrenadorId)
         {
-            var original = _socioExistente!;
+            var (exitoso, mensaje) = _servicioSocios.EditarSocio(
+                _socioExistente!.Id, nombre, apellido, fechaNacimiento, telefono, email, plan.Id, entrenadorId);
 
-            // RF-02: el DNI queda inalterable, se conserva del registro original.
-            var actualizado = new SocioDemo
+            if (!exitoso)
             {
-                Id = original.Id,
-                Nombre = nombre,
-                Apellido = apellido,
-                Dni = original.Dni,
-                FechaNacimiento = fechaNacimiento,
-                Telefono = telefono,
-                Email = email,
-                Activo = original.Activo,
-                EntrenadorId = (cmbEntrenador.SelectedItem as EntrenadorItem)?.Id,
-                TipoMembresia = plan.Nombre,
-                Precio = plan.Precio,
-                FechaInicio = original.FechaInicio,
-                // La cuota vigente no se modifica al editar los datos del socio.
-                FechaVencimiento = original.FechaVencimiento,
-                UltimoPagoMonto = original.UltimoPagoMonto,
-                UltimoPagoFecha = original.UltimoPagoFecha
-            };
-
-            int indice = DatosRecepDemo.Socios.FindIndex(s => s.Id == original.Id);
-            if (indice >= 0)
-                DatosRecepDemo.Socios[indice] = actualizado;
+                MostrarError(mensaje);
+                return;
+            }
 
             DialogResult = true;
             Close();
@@ -270,7 +256,6 @@ namespace SGG.Formularios.Recepcionista
         public string Descripcion { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public decimal Precio { get; set; }
-        public int DuracionDias { get; set; } = 30;
 
         public override string ToString() => Descripcion;
     }

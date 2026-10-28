@@ -1,13 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using SGG.Dominio.Entidades;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Recepcionista
 {
     public partial class GestionSocios : UserControl
     {
+        private readonly ServicioSocios _servicioSocios = new();
+        private readonly Dictionary<int, Socio> _sociosPorId = new();
+
         private ObservableCollection<SocioVista> _todosLosSocios = new();
         public ObservableCollection<SocioVista> Socios { get; set; } = new();
 
@@ -20,22 +26,26 @@ namespace SGG.Formularios.Recepcionista
 
         private void CargarSocios()
         {
-            // TODO integración BD: en la fase de conexión esto se reemplaza por
-            // ServicioSocios.ObtenerTodos() (SGG.Logica / SGG.Datos).
-            var sociosDemo = DatosRecepDemo.ObtenerSocios();
+            var reales = _servicioSocios.ObtenerTodos();
+
+            _sociosPorId.Clear();
+            foreach (var s in reales)
+                _sociosPorId[s.Id] = s;
 
             _todosLosSocios = new ObservableCollection<SocioVista>(
-                sociosDemo.Select(s => new SocioVista
+                reales.Select(s => new SocioVista
                 {
                     Id = s.Id,
-                    NombreCompleto = s.NombreCompleto,
+                    NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
                     Dni = s.Dni,
-                    Plan = s.TipoMembresia,
+                    Plan = s.Membresia?.TipoActividad.ToString() ?? "Sin plan",
                     Estado = s.Activo ? "Activo" : "Inactivo",
-                    Vence = s.FechaVencimiento < DateTime.Today
-                        ? "Vencida"
-                        : s.FechaVencimiento.ToShortDateString(),
-                    EstadoCuota = DatosRecepDemo.EstadoCuota(s)
+                    Vence = !s.FechaVencimiento.HasValue
+                        ? "Sin cuota"
+                        : s.FechaVencimiento.Value.Date < DateTime.Today
+                            ? "Vencida"
+                            : s.FechaVencimiento.Value.ToShortDateString(),
+                    EstadoCuota = ServicioAsistencias.EstadoCuota(s)
                 })
             );
 
@@ -87,10 +97,10 @@ namespace SGG.Formularios.Recepcionista
             var boton = (Button)sender;
             int id = (int)boton.Tag;
 
-            var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.Id == id);
-            if (demo == null) return;
+            if (!_sociosPorId.TryGetValue(id, out var socio))
+                return;
 
-            var ventana = new AltaSocio(demo);
+            var ventana = new AltaSocio(socio);
             if (ventana.ShowDialog() == true)
                 CargarSocios();
         }
@@ -101,10 +111,10 @@ namespace SGG.Formularios.Recepcionista
             int id = (int)boton.Tag;
 
             var vista = _todosLosSocios.FirstOrDefault(s => s.Id == id);
-            var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.Id == id);
-            if (vista == null || demo == null) return;
+            if (!_sociosPorId.TryGetValue(id, out var socio) || vista == null)
+                return;
 
-            bool esActivo = demo.Activo;
+            bool esActivo = socio.Activo;
             string accion = esActivo ? "dar de baja" : "reactivar";
 
             var confirmacion = MessageBox.Show(
@@ -116,12 +126,17 @@ namespace SGG.Formularios.Recepcionista
             if (confirmacion != MessageBoxResult.Yes)
                 return;
 
-            // RF-04: alternar el estado en la lista demo y refrescar la fila en vivo
-            demo.Activo = !demo.Activo;
-            vista.Estado = demo.Activo ? "Activo" : "Inactivo";
+            var resultado = esActivo
+                ? _servicioSocios.DarDeBaja(id)
+                : _servicioSocios.Reactivar(id);
 
-            ActualizarContador();
-            AplicarFiltro();
+            if (!resultado.Exitoso)
+            {
+                MessageBox.Show(resultado.Mensaje, "Atención", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            CargarSocios();
         }
     }
 

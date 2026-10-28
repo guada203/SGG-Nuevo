@@ -1,5 +1,9 @@
+using SGG.Dominio.Entidades;
 using SGG.Logica.Servicios;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -10,6 +14,8 @@ namespace SGG.Formularios.Admin
     public partial class PanelInicioAdmin : UserControl
     {
         private readonly ServicioDashboard _servicioDashboard = new();
+        private readonly ServicioPagos _servicioPagos = new();
+        private readonly ServicioAsistencias _servicioAsistencias = new();
 
         public PanelInicioAdmin()
         {
@@ -40,6 +46,12 @@ namespace SGG.Formularios.Admin
         {
             var serie = _servicioDashboard.ObtenerIngresosUltimosMeses(6);
 
+            if (serie.Count == 0)
+            {
+                txtTendenciaIngresos.Text = "● Sin datos";
+                return;
+            }
+
             decimal mesActual = serie[^1].Total;
             decimal mesAnterior = serie.Count >= 2 ? serie[^2].Total : 0;
 
@@ -53,17 +65,6 @@ namespace SGG.Formularios.Admin
             {
                 // Sin mes anterior con datos no hay porcentaje representable.
                 txtTendenciaIngresos.Text = "● Sin cambios";
-            }
-
-            // Si no hay pagos registrados la serie real es todo ceros: usar valores
-            // simulados para que el gráfico muestre algo (los KPIs siguen siendo reales).
-            if (serie.Sum(s => s.Total) == 0)
-            {
-                decimal[] simulados = { 1800, 2100, 1950, 2400, 2600, 2900 };
-                for (int i = 0; i < serie.Count; i++)
-                {
-                    serie[i] = (serie[i].Mes, simulados[i]);
-                }
             }
 
             decimal maxTotal = serie.Max(s => s.Total);
@@ -124,16 +125,43 @@ namespace SGG.Formularios.Admin
 
         private void CargarActividadReciente()
         {
-            var eventos = new (string Icono, string Texto, string Tiempo)[]
-            {
-                ("✅", "Nuevo pago de socio registrado", "hace 2 h"),
-                ("👤", "Alta de socio registrada", "hace 5 h"),
-                ("💳", "Renovación de membresía", "hace 1 d"),
-                ("🚫", "Baja de socio procesada", "hace 2 d"),
-                ("🧑‍💼", "Nuevo usuario del sistema creado", "hace 3 d")
-            };
+            // Actividad derivada de los movimientos reales: pagos y asistencias.
+            var eventos = new List<(DateTime Fecha, string Icono, string Texto)>();
 
-            for (int i = 0; i < eventos.Length; i++)
+            foreach (var pago in _servicioPagos.ObtenerTodos())
+            {
+                eventos.Add((
+                    pago.FechaPago,
+                    "✅",
+                    $"Nuevo pago — {NombreDeSocio(pago.Socio)}"));
+            }
+
+            foreach (var asistencia in _servicioAsistencias.ObtenerTodos())
+            {
+                eventos.Add((
+                    asistencia.FechaHoraIngreso,
+                    "🏋️",
+                    $"Ingreso de socio — {NombreDeSocio(asistencia.Socio)}"));
+            }
+
+            var recientes = eventos
+                .OrderByDescending(e => e.Fecha)
+                .Take(5)
+                .ToList();
+
+            if (recientes.Count == 0)
+            {
+                spActividad.Children.Add(new TextBlock
+                {
+                    Text = "Todavía no hay actividad registrada.",
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)),
+                    Margin = new Thickness(0, 7, 0, 7)
+                });
+                return;
+            }
+
+            for (int i = 0; i < recientes.Count; i++)
             {
                 var fila = new Grid();
                 fila.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -143,7 +171,7 @@ namespace SGG.Formularios.Admin
 
                 var icono = new TextBlock
                 {
-                    Text = eventos[i].Icono,
+                    Text = recientes[i].Icono,
                     FontSize = 16,
                     VerticalAlignment = VerticalAlignment.Center
                 };
@@ -151,7 +179,7 @@ namespace SGG.Formularios.Admin
 
                 var texto = new TextBlock
                 {
-                    Text = eventos[i].Texto,
+                    Text = recientes[i].Texto,
                     FontSize = 12,
                     Foreground = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD)),
                     Margin = new Thickness(10, 0, 10, 0),
@@ -162,7 +190,7 @@ namespace SGG.Formularios.Admin
 
                 var tiempo = new TextBlock
                 {
-                    Text = eventos[i].Tiempo,
+                    Text = FormatearTiempo(recientes[i].Fecha),
                     FontSize = 10,
                     Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)),
                     VerticalAlignment = VerticalAlignment.Center
@@ -174,7 +202,7 @@ namespace SGG.Formularios.Admin
                 fila.Children.Add(tiempo);
                 spActividad.Children.Add(fila);
 
-                if (i < eventos.Length - 1)
+                if (i < recientes.Count - 1)
                 {
                     spActividad.Children.Add(new Border
                     {
@@ -183,6 +211,29 @@ namespace SGG.Formularios.Admin
                     });
                 }
             }
+        }
+
+        private static string NombreDeSocio(Socio? socio) =>
+            socio == null ? "socio desconocido" : $"{socio.Nombre} {socio.Apellido}".Trim();
+
+        /// <summary>Tiempo relativo simple para la lista de actividad reciente.</summary>
+        private static string FormatearTiempo(DateTime fecha)
+        {
+            var transcurrido = DateTime.Now - fecha;
+
+            if (transcurrido < TimeSpan.Zero)
+                return "ahora";
+
+            if (transcurrido.TotalMinutes < 1)
+                return "hace instantes";
+
+            if (transcurrido.TotalMinutes < 60)
+                return $"hace {(int)transcurrido.TotalMinutes} min";
+
+            if (transcurrido.TotalHours < 24)
+                return $"hace {(int)transcurrido.TotalHours} h";
+
+            return $"hace {(int)transcurrido.TotalDays} d";
         }
 
         private static string FormatearMonto(decimal total)

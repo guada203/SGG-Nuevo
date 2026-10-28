@@ -9,13 +9,27 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 
 		<TextBlock Grid.Row="0" Text="Mis Alumnos" FontSize="26" FontWeight="Bold" Foreground="White" Margin="0,0,0,4"/>
 		<TextBlock Grid.Row="1" Text="Socios asignados a vos como entrenadora" FontSize="12" Foreground="#888888" Margin="0,0,0,20"/>
+		<TextBox x:Name="txtBuscarAlumno"
+				 TextChanged="txtBuscarAlumno_TextChanged"
+				 Grid.Row="2"
+				 Height="36"
+				 Margin="0,0,0,20"
+				 Padding="12,8"
+				 Background="#1A1A1A"
+				 Foreground="White"
+				 BorderBrush="#333333"
+				 BorderThickness="1" 
+				 FontSize="13"
+				 VerticalContentAlignment="Center"
+				 ToolTip="Buscar por nombre, apellido o DNI"/>
 
-		<Grid Grid.Row="2">
+		<Grid Grid.Row="3">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*"/>
 				<ColumnDefinition Width="20"/>
@@ -27,7 +41,9 @@
 				<DockPanel>
 					<TextBlock DockPanel.Dock="Top" Text="Sin Rutina Asignada" FontSize="14" FontWeight="Bold"
                                Foreground="#F59E0B" Margin="0,0,0,12"/>
-					<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<ScrollViewer VerticalScrollBarVisibility="Auto"
+								  HorizontalScrollBarVisibility="Disabled"
+								  CanContentScroll="True">
 						<ItemsControl x:Name="icSinRutina">
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>

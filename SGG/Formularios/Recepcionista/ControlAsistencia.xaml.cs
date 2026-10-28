@@ -7,11 +7,14 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Recepcionista
 {
     public partial class ControlAsistencia : UserControl
     {
+        private readonly ServicioAsistencias _servicioAsistencias = new();
+
         public ObservableCollection<SocioVista> Socios { get; set; } = new();
         public ObservableCollection<AsistenciaVista> AsistenciasHoy { get; set; } = new();
         public ObservableCollection<AsistenciaHistorialVista> HistorialSocio { get; set; } = new();
@@ -125,13 +128,13 @@ namespace SGG.Formularios.Recepcionista
 
             if (cmbSocioHistorial.SelectedItem is not SocioVista socio) return; // nada seleccionado
 
-            var registros = DatosRecepDemo.ObtenerAsistencias()
-                .Where(a => a.SocioNombre == socio.NombreCompleto)
-                .OrderByDescending(a => a.FechaHora)
+            // RF-10: se consulta por Id (no por nombre) contra la base real.
+            // El repositorio ya devuelve los registros ordenados de más reciente a más antiguo.
+            var registros = _servicioAsistencias.ObtenerPorSocio(socio.Id)
                 .Select(a => new AsistenciaHistorialVista
                 {
-                    Fecha = a.FechaHora.ToString("dd/MM/yyyy"),
-                    Hora = a.FechaHora.ToString("HH:mm")
+                    Fecha = a.FechaHoraIngreso.ToString("dd/MM/yyyy"),
+                    Hora = a.FechaHoraIngreso.ToString("HH:mm")
                 });
 
             foreach (var r in registros)
@@ -146,32 +149,29 @@ namespace SGG.Formularios.Recepcionista
 
         private void CargarSocios()
         {
-            foreach (var s in DatosRecepDemo.ObtenerSocios())
+            foreach (var s in new ServicioSocios().ObtenerTodos())
             {
                 Socios.Add(new SocioVista
                 {
                     Id = s.Id,
                     NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
                     Dni = s.Dni,
-                    EstadoCuota = DatosRecepDemo.EstadoCuota(s)
+                    EstadoCuota = ServicioAsistencias.EstadoCuota(s)
                 });
             }
         }
 
         private void CargarAsistenciasDeHoy()
         {
-            var deHoy = DatosRecepDemo.ObtenerAsistencias()
-                .Where(a => a.FechaHora.Date == DateTime.Today)
-                .OrderBy(a => a.FechaHora)
-                .Select(a => new AsistenciaVista
+            foreach (var a in _servicioAsistencias.ObtenerDeHoy())
+            {
+                AsistenciasHoy.Add(new AsistenciaVista
                 {
-                    Socio = a.SocioNombre,
-                    Hora = a.FechaHora.ToString("HH:mm"),
-                    EstadoCuota = EstadoCuotaDe(a.SocioNombre)
+                    Socio = $"{a.Socio?.Nombre} {a.Socio?.Apellido}".Trim(),
+                    Hora = a.FechaHoraIngreso.ToString("HH:mm"),
+                    EstadoCuota = a.Socio != null ? ServicioAsistencias.EstadoCuota(a.Socio) : "Al día"
                 });
-
-            foreach (var a in deHoy)
-                AsistenciasHoy.Add(a);
+            }
         }
 
         private void btnRegistrarIngreso_Click(object sender, RoutedEventArgs e)
@@ -184,39 +184,25 @@ namespace SGG.Formularios.Recepcionista
                 return;
             }
 
-            var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.Id == socio.Id);
-            if (demo == null)
+            // RF-08/RF-09: el servicio valida existencia, alta y cuota al día,
+            // y persiste la asistencia en la base real.
+            var (exitoso, mensaje, asistencia) = _servicioAsistencias.RegistrarIngreso(socio.Id);
+            if (!exitoso)
             {
-                MostrarMensaje("El socio no existe en el padrón.", esError: true);
+                MostrarMensaje(mensaje, esError: true);
                 return;
             }
 
-            // RF-09: validación real de cuota vencida antes de permitir el ingreso
-            if (demo.FechaVencimiento < DateTime.Today)
-            {
-                MostrarMensaje(
-                    $"El socio tiene la cuota vencida (vence: {demo.FechaVencimiento.ToString("dd/MM/yyyy")}). No puede ingresar.",
-                    esError: true);
-                return;
-            }
-
-            // RF-08: registrar el ingreso con la hora actual
             AsistenciasHoy.Add(new AsistenciaVista
             {
                 Socio = socio.NombreCompleto,
-                Hora = DateTime.Now.ToString("HH:mm"),
+                Hora = asistencia!.FechaHoraIngreso.ToString("HH:mm"),
                 EstadoCuota = "Al día"
             });
 
             MostrarMensaje($"✔ Ingreso registrado correctamente para {socio.NombreCompleto}.", esError: false);
             cmbSocioIngreso.SelectedIndex = -1;
             cmbSocioIngreso.Text = string.Empty;
-        }
-
-        private static string EstadoCuotaDe(string nombreCompleto)
-        {
-            var demo = DatosRecepDemo.Socios.FirstOrDefault(s => s.NombreCompleto == nombreCompleto);
-            return demo != null ? DatosRecepDemo.EstadoCuota(demo) : "Al día";
         }
 
         private void MostrarMensaje(string texto, bool esError)
