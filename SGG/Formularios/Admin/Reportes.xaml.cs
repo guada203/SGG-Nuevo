@@ -262,7 +262,6 @@ namespace SGG.Formularios.Admin
             dgReporte.Columns.Add(CrearColumnaTexto("Nombre", "Nombre"));
             dgReporte.Columns.Add(CrearColumnaTexto("Estado", "Estado"));
             dgReporte.Columns.Add(CrearColumnaTexto("Membresía", "Membresia"));
-            dgReporte.Columns.Add(CrearColumnaTexto("Vencimiento", "FechaVencimiento", "{0:dd/MM/yyyy}"));
 
             dgReporte.ItemsSource = _sociosActuales;
             txtResumen.Text = ObtenerTextoResumen();
@@ -441,6 +440,28 @@ namespace SGG.Formularios.Admin
                     .OrderByDescending(i => i.Valor)
                     .ToList()
             );
+
+            // Cuotas: pagadas vs vencidas (conteo)
+            var hoy = DateTime.Today;
+            int cuotasPagadas = PagosVisibles.Count;
+            int cuotasVencidas = 0;
+            if (_sociosPorId.Count > 0)
+            {
+                cuotasVencidas = _sociosPorId.Values.Count(s =>
+                    s.Activo &&
+                    s.FechaVencimiento.HasValue &&
+                    s.FechaVencimiento.Value.Date < hoy);
+            }
+
+            var datosCuotas = new List<GraficoTortaItem>();
+            if (cuotasPagadas > 0)
+                datosCuotas.Add(new GraficoTortaItem { Etiqueta = "Pagadas", Valor = cuotasPagadas, ColorHex = "#C5FF00" });
+            if (cuotasVencidas > 0)
+                datosCuotas.Add(new GraficoTortaItem { Etiqueta = "Vencidas", Valor = cuotasVencidas, ColorHex = "#FF5555" });
+            if (datosCuotas.Count == 0)
+                datosCuotas.Add(new GraficoTortaItem { Etiqueta = "Sin datos", Valor = 1, ColorHex = "#666666" });
+
+            tortaCuotas.SetDatos(datosCuotas);
         }
 
         private void MostrarTortasSocios()

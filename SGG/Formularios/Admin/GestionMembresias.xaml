@@ -39,7 +39,6 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Actividad" Binding="{Binding Actividad}" Width="200"/>
                 <DataGridTextColumn Header="Precio" Binding="{Binding Precio}" Width="120"/>
-                <DataGridTextColumn Header="Vence" Binding="{Binding Vence}" Width="130"/>
                 <DataGridTextColumn Header="Estado" Binding="{Binding Estado}" Width="120"/>
                 <DataGridTemplateColumn Header="Acciones" Width="170">
                     <DataGridTemplateColumn.CellTemplate>
