@@ -2,37 +2,84 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Entrenador
 {
     public partial class PanelInicioEntrenador : UserControl
     {
+        private readonly ServicioSocios _servicioSocios = new();
+        private readonly ServicioRutinas _servicioRutinas = new();
         public PanelInicioEntrenador()
         {
             InitializeComponent();
+
+            txtFecha.Text = DateTime.Now.ToString(
+                "dddd, dd 'de' MMMM 'de' yyyy",
+                new System.Globalization.CultureInfo("es-AR")
+            );
+
             CargarDatosDePrueba();
         }
 
         private void CargarDatosDePrueba()
         {
-            txtRutinasCreadas.Text = "24";
-            txtSociosAsignados.Text = "18";
-            txtRutinasActivas.Text = "15";
-            txtRutinasCompletadas.Text = "9";
 
-            dgRutinasRecientes.ItemsSource = new List<RutinaResumen>
-            {
-                new RutinaResumen { Nombre = "Hipertrofia", Socio = "Mateo Rodríguez", Fecha = "21 Oct 2024", Estado = "Activa" },
-                new RutinaResumen { Nombre = "Acondicionamiento", Socio = "Valeria Espinoza", Fecha = "19 Oct 2024", Estado = "Activa" },
-                new RutinaResumen { Nombre = "Fuerza", Socio = "Ignacio Silva", Fecha = "18 Oct 2024", Estado = "Completada" },
-            };
+            // Obtener los socios activos asignados al entrenador actual.
+            var socios = _servicioSocios.ObtenerTodos()
+                .Where(s => s.Activo && s.EntrenadorId == Sesion.UsuarioId)
+                .ToList();
 
-            icSociosSinRutina.ItemsSource = new List<SocioPendiente>
-            {
-                new SocioPendiente { SocioId = 12, Nombre = "Sofía Martínez", Meta = "Ingresó hoy" },
-                new SocioPendiente { SocioId = 15, Nombre = "Lucas Domínguez", Meta = "Hace 2 días" },
-                new SocioPendiente { SocioId = 19, Nombre = "Martina Vega", Meta = "Hace 3 días" },
-            };
+            // Obtener los IDs de esos socios.
+            var idsSocios = socios.Select(s => s.Id).ToHashSet();
+
+            // Obtener las rutinas de los socios asignados.
+            var rutinas = _servicioRutinas.ObtenerTodas()
+                .Where(r => idsSocios.Contains(r.SocioId))
+                .ToList();
+
+            // Actualizar las estadísticas con datos reales.
+            txtRutinasCreadas.Text = rutinas.Count.ToString();
+            txtSociosAsignados.Text = socios.Count.ToString();
+            txtRutinasActivas.Text = rutinas.Count(r => r.Estado == "Activa").ToString();
+            txtRutinasCompletadas.Text = rutinas.Count(r => r.Estado == "Completada").ToString();
+
+
+
+            dgRutinasRecientes.ItemsSource = rutinas
+                .OrderByDescending(r => r.FechaAsignacion)
+                .ThenByDescending(r => r.Id)
+                .Take(5)
+                .Select(r =>
+                {
+                    var socio = socios.FirstOrDefault(s => s.Id == r.SocioId);
+
+                    return new RutinaResumen
+                    {
+                        Nombre = r.Nombre,
+                        Socio = socio != null
+                            ? $"{socio.Nombre} {socio.Apellido}"
+                            : "Socio no encontrado",
+                        Fecha = r.FechaAsignacion.ToString("dd MMM yyyy"),
+                        Estado = r.Estado
+                    };
+                })
+                .ToList();
+
+
+
+            icSociosSinRutina.ItemsSource = socios
+                .Where(s => !rutinas.Any(r =>
+                    r.SocioId == s.Id && r.Estado == "Activa"))
+                .Select(s => new SocioPendiente
+                {
+                    SocioId = s.Id,
+                    Nombre = $"{s.Nombre} {s.Apellido}".Trim(),
+                    Meta = "Sin rutina activa"
+                })
+                .ToList();
+
         }
 
         private void btnCrearRutina_Click(object sender, RoutedEventArgs e)

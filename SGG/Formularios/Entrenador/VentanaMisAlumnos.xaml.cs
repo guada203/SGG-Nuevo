@@ -1,52 +1,98 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using SGG;
 using SGG.Formularios.Recepcionista;
+using SGG.Logica.Servicios;
 
 namespace SGG.Formularios.Entrenador
 {
     public partial class VentanaMisAlumnos : Window
     {
+        private readonly ServicioSocios _servicioSocios = new();
+        private readonly ServicioRutinas _servicioRutinas = new();
+        private List<AlumnoItem> _todosLosAlumnos = new();
         public VentanaMisAlumnos()
         {
             InitializeComponent();
             CargarDatosDePrueba();
         }
 
+
+
         private void CargarDatosDePrueba()
         {
-            // Carga solo los socios activos asignados al entrenador logueado (front/demo sobre DatosRecepDemo).
-            var socios = DatosRecepDemo.ObtenerSocios()
-                .Where(s => s.Activo && s.EntrenadorId.HasValue && s.EntrenadorId.Value == Sesion.UsuarioId)
+            // Obtener los socios activos del entrenador que inició sesión.
+            var socios = _servicioSocios.ObtenerTodos()
+                .Where(s => s.Activo && s.EntrenadorId == Sesion.UsuarioId)
                 .ToList();
 
-            var alumnos = socios
-                .Select(s => new AlumnoItem
+            // Obtener las rutinas reales guardadas en SQL Server.
+            var rutinas = _servicioRutinas.ObtenerTodas();
+
+            // Preparar los alumnos para mostrarlos en las tarjetas.
+            var alumnos = socios.Select(s =>
+            {
+                // Buscar una rutina activa que pertenezca a este socio.
+                var rutina = rutinas
+                    .Where(r => r.SocioId == s.Id && r.Estado == "Activa")
+                    .OrderByDescending(r => r.FechaAsignacion)
+                    .ThenByDescending(r => r.Id)
+                    .FirstOrDefault();
+
+                return new AlumnoItem
                 {
                     SocioId = s.Id,
                     NombreCompleto = $"{s.Nombre} {s.Apellido}".Trim(),
                     Dni = $"DNI {s.Dni}",
-                    RutinaActual = null
-                })
+
+                    // Convertir la rutina al formato que utiliza nuestra interfaz.
+                    RutinaActual = rutina == null ? null : new RutinaListItem
+                    {
+                        Id = rutina.Id,
+                        SocioId = rutina.SocioId,
+                        Nombre = rutina.Nombre,
+                        SocioNombre = $"{s.Nombre} {s.Apellido}".Trim(),
+                        DuracionSemanas = rutina.DuracionSemanas,
+                        FrecuenciaSemanal = rutina.FrecuenciaSemanal,
+                        Objetivo = rutina.Objetivo,
+                        Nivel = rutina.Nivel,
+                        Estado = rutina.Estado,
+                        CantidadEjercicios = rutina.Ejercicios.Count
+                    }
+                };
+            }).ToList();
+
+            _todosLosAlumnos = alumnos;
+            FiltrarAlumnos();
+        }
+
+        private void txtBuscarAlumno_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FiltrarAlumnos();
+        }
+
+        private void FiltrarAlumnos()
+        {
+            string busqueda = txtBuscarAlumno.Text.Trim();
+
+            var alumnosFiltrados = _todosLosAlumnos
+                .Where(a =>
+                    a.NombreCompleto.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                    a.Dni.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            // Fallback demo: sin socios asignados al entrenador logueado se muestran alumnos de ejemplo.
-            if (alumnos.Count == 0)
-            {
-                alumnos = new List<AlumnoItem>
-                {
-                    new AlumnoItem { SocioId = 1, NombreCompleto = "Juan Pérez", Dni = "DNI 40123456", RutinaActual = null },
-                    new AlumnoItem { SocioId = 2, NombreCompleto = "María Gómez", Dni = "DNI 38654987",
-                        RutinaActual = new RutinaListItem { Id = 1, SocioId = 2, Nombre = "Hipertrofia - Nivel Avanzado", SocioNombre = "María Gómez", DuracionSemanas = 8, FrecuenciaSemanal = 4, Objetivo = "Aumentar masa muscular general", Nivel = "Avanzado", Estado = "Activa" } },
-                    new AlumnoItem { SocioId = 3, NombreCompleto = "Lucas Rodríguez", Dni = "DNI 42987123", RutinaActual = null },
-                };
-            }
+            icSinRutina.ItemsSource = alumnosFiltrados
+                .Where(a => a.RutinaActual == null)
+                .ToList();
 
-            icSinRutina.ItemsSource = alumnos.Where(a => a.RutinaActual == null).ToList();
-            icConRutina.ItemsSource = alumnos.Where(a => a.RutinaActual != null).ToList();
+            icConRutina.ItemsSource = alumnosFiltrados
+                .Where(a => a.RutinaActual != null)
+                .ToList();
         }
+
 
         private void btnAsignar_Click(object sender, RoutedEventArgs e)
         {
@@ -58,6 +104,9 @@ namespace SGG.Formularios.Entrenador
                 var elegir = new VentanaElegirRutina(alumno.SocioId);
                 elegir.Owner = this;
                 elegir.ShowDialog();
+
+                // Actualizar las tarjetas al volver de la ventana de asignación.
+                CargarDatosDePrueba();
             }
         }
 
@@ -71,6 +120,9 @@ namespace SGG.Formularios.Entrenador
                 var formulario = new VentanaGestionRutinas(alumno.RutinaActual);
                 formulario.Owner = this;
                 formulario.ShowDialog();
+
+                // Actualizar las tarjetas al volver de editar una rutina.
+                CargarDatosDePrueba();
             }
         }
     }
