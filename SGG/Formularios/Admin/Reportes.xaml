@@ -60,11 +60,18 @@
                         <controles:GraficoTorta x:Name="tortaActividad" Width="240" Height="180"/>
                     </StackPanel>
                 </Border>
-                <Border Background="#1A1A1A" CornerRadius="8" Padding="16">
+                <Border Background="#1A1A1A" CornerRadius="8" Padding="16" Margin="0,0,15,0">
                     <StackPanel>
                         <TextBlock Text="MÉTODOS DE PAGO" FontSize="11" Foreground="#888888"
                                    FontWeight="SemiBold" Margin="0,0,0,8"/>
                         <controles:GraficoTorta x:Name="tortaMetodo" Width="240" Height="180"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="#1A1A1A" CornerRadius="8" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="CUOTAS PAGADAS VS VENCIDAS" FontSize="11" Foreground="#888888"
+                                   FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <controles:GraficoTorta x:Name="tortaCuotas" Width="240" Height="180"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
