@@ -11,6 +11,7 @@ namespace SGG.Formularios.Entrenador
         private List<RutinaListItem> _todasLasRutinas;
         private string _filtroActual = "Todas";
         private readonly ServicioRutinas _servicioRutinas = new();
+        private readonly ServicioSocios _servicioSocios = new();
 
         public VentanaListaRutinas()
         {
@@ -22,8 +23,16 @@ namespace SGG.Formularios.Entrenador
 
         private void CargarRutinas()
         {
-            // Obtenemos las rutinas reales desde SQL Server.
-            var rutinas = _servicioRutinas.ObtenerTodas();
+            // Obtener los socios asignados al entrenador que inició sesión.
+            var idsSocios = _servicioSocios.ObtenerTodos()
+                .Where(s => s.Activo && s.EntrenadorId == Sesion.UsuarioId)
+                .Select(s => s.Id)
+                .ToHashSet();
+
+            // Obtener solamente las rutinas de esos socios.
+            var rutinas = _servicioRutinas.ObtenerTodas()
+                .Where(r => idsSocios.Contains(r.SocioId))
+                .ToList();
 
             // Convertimos las entidades en objetos que
             // nuestra interfaz ya sabe mostrar.

@@ -134,16 +134,14 @@ namespace SGG.Formularios.Entrenador
         {
             icEjercicios.ItemsSource = Ejercicios;
 
-            // Obtenemos los socios reales registrados en SQL Server.
             _sociosTodos = _servicioSocios.ObtenerTodos()
-                .Where(s => s.Activo)
+                .Where(s => s.Activo && s.EntrenadorId == Sesion.UsuarioId)
                 .Select(s => new SocioComboItem
                 {
                     Id = s.Id,
                     NombreCompleto = $"{s.Nombre} {s.Apellido} - DNI {s.Dni}"
                 })
                 .ToList();
-
             cmbSocios.ItemsSource = _sociosTodos;
 
             // La "vista" es una capa sobre la lista que permite ocultar elementos
@@ -238,6 +236,20 @@ namespace SGG.Formularios.Entrenador
             if (cmbSocios.SelectedItem is not SocioComboItem socioSeleccionado)
             {
                 MessageBox.Show("Seleccioná un socio de la lista.");
+                return;
+            }
+            bool sigueAsignado = _servicioSocios.ObtenerTodos()
+                .Any(s => s.Id == socioSeleccionado.Id
+           && s.Activo
+           && s.EntrenadorId == Sesion.UsuarioId);
+
+            if (!sigueAsignado)
+            {
+                MessageBox.Show(
+                    "Este socio ya no está asignado a tu entrenador. No se puede guardar la rutina.",
+                    "Socio no disponible",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
