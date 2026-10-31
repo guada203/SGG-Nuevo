@@ -15,8 +15,11 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
-                <TextBlock x:Name="txtBienvenida" Text="¡Bienvenida, Entrenadora!" 
-                           FontSize="24" FontWeight="Bold" Foreground="White"/>
+				<TextBlock x:Name="txtBienvenida"
+						   Text="¡Bienvenido, entrenador!"
+						   FontSize="24"
+						   FontWeight="Bold"
+						   Foreground="White"/>
                 <TextBlock x:Name="txtFecha" Text="Fecha" FontSize="12" 
                            Foreground="#888888" Margin="0,4,0,0"/>
             </StackPanel>

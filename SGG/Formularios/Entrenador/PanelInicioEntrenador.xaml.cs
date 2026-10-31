@@ -15,6 +15,8 @@ namespace SGG.Formularios.Entrenador
         {
             InitializeComponent();
 
+            txtBienvenida.Text = $"¡Bienvenido, entrenador {Sesion.NombreVisible}!";
+
             txtFecha.Text = DateTime.Now.ToString(
                 "dddd, dd 'de' MMMM 'de' yyyy",
                 new System.Globalization.CultureInfo("es-AR")
