@@ -28,7 +28,9 @@ namespace SGG.Formularios.Admin
         private ReporteAsistenciaSocioVista? _asistenciaDetalle; // null = modo lista, no null = modo detalle
         private List<ReporteSocioVista> _sociosActuales = new();
         private ListCollectionView _vistaPagosActual;
+        private ListCollectionView _vistaAsistenciasSocios;
         private string _textoBuscarPagos = string.Empty;
+        private string _textoBuscarAsistencias = string.Empty;
 
         private readonly ServicioReportes _servicioReportes = new();
         private readonly ServicioPagos _servicioPagos = new();
@@ -128,6 +130,7 @@ namespace SGG.Formularios.Admin
             dgReporte.ItemsSource = _vistaPagosActual;
 
             panelFiltroSocio.Visibility = Visibility.Visible;
+            panelFiltroAsistencias.Visibility = Visibility.Collapsed;
             txtResumen.Text = ObtenerTextoResumen();
 
             // Alimentar tortas de pagos
@@ -141,28 +144,38 @@ namespace SGG.Formularios.Admin
             // Asistencias reales de la base (una fila por registro de ingreso).
             _asistenciasActuales = _servicioAsistencias.ObtenerTodos();
 
-            // Vista por socio: agrupa por Id (no por nombre) para no fusionar
-            // socios distintos que comparten el mismo nombre. Calcula total y última visita.
-            _asistenciasSocios = _asistenciasActuales
+            // Estadísticas por socio (solo de quienes tienen asistencias registradas).
+            var statsPorSocio = _asistenciasActuales
                 .GroupBy(a => a.SocioId)
-                .Select(g =>
+                .ToDictionary(
+                    g => g.Key,
+                    g => new { Total = g.Count(), UltimaVisita = g.Max(a => a.FechaHoraIngreso) });
+
+            // Listado: TODOS los socios (sin repetidos), con total y última visita si tienen asistencias.
+            var socios = CargarSocios();
+            _asistenciasSocios = socios
+                .Select(s =>
                 {
-                    var nombre = g.First().Socio is { } socio ? NombreDeSocio(socio) : "Socio desconocido";
+                    statsPorSocio.TryGetValue(s.Id, out var stats);
                     return new ReporteAsistenciaSocioVista
                     {
-                        SocioId = g.Key,
-                        Socio = nombre,
-                        Total = g.Count(),
-                        UltimaVisita = g.Max(a => a.FechaHoraIngreso)
+                        SocioId = s.Id,
+                        Socio = NombreDeSocio(s),
+                        Total = stats?.Total ?? 0,
+                        UltimaVisita = stats?.UltimaVisita
                     };
                 })
-                .OrderByDescending(s => s.Total)
-                .ThenBy(s => s.Socio)
+                .OrderByDescending(x => x.Total > 0)
+                .ThenByDescending(x => x.Total)
+                .ThenBy(x => x.Socio)
                 .ToList();
+
+            _vistaAsistenciasSocios = new ListCollectionView(_asistenciasSocios);
+            _vistaAsistenciasSocios.Filter = FiltrarAsistenciaSocioActual;
 
             MostrarListadoAsistencias();
 
-            // Ocultar tortas y filtro de socio en asistencias
+            // Ocultar tortas y filtro de pagos en asistencias
             panelTortas.Visibility = Visibility.Collapsed;
             panelFiltroSocio.Visibility = Visibility.Collapsed;
         }
@@ -175,12 +188,13 @@ namespace SGG.Formularios.Admin
             dgReporte.Columns.Clear();
             dgReporte.Columns.Add(CrearColumnaTexto("Socio", "Socio"));
             dgReporte.Columns.Add(CrearColumnaTexto("Total", "Total", "{0} asistencias"));
-            dgReporte.Columns.Add(CrearColumnaTexto("Última visita", "UltimaVisita", "{0:dd/MM/yyyy HH:mm}"));
+            dgReporte.Columns.Add(CrearColumnaTexto("Última visita", "UltimaVisita", "{0:dd/MM/yyyy HH:mm}", permitirNulo: true));
             dgReporte.Columns.Add(CrearColumnaBotonVerDetalle());
 
-            dgReporte.ItemsSource = _asistenciasSocios;
-            txtResumen.Text = ObtenerTextoResumen();
+            dgReporte.ItemsSource = _vistaAsistenciasSocios;
+            panelFiltroAsistencias.Visibility = Visibility.Visible;
             btnVolverAsistencias.Visibility = Visibility.Collapsed;
+            AplicarFiltroAsistencias();
         }
 
         // Modo detalle: historial de asistencias del socio seleccionado (más reciente primero).
@@ -201,9 +215,10 @@ namespace SGG.Formularios.Admin
 
             dgReporte.Columns.Clear();
             dgReporte.Columns.Add(CrearColumnaTexto("Socio", "Socio"));
-            dgReporte.Columns.Add(CrearColumnaTexto("FechaHora", "FechaHora", "{0:dd/MM/yyyy HH:mm}"));
+            dgReporte.Columns.Add(CrearColumnaTexto("Fecha y hora", "FechaHora", "{0:dd/MM/yyyy HH:mm}"));
 
             dgReporte.ItemsSource = historial;
+            panelFiltroAsistencias.Visibility = Visibility.Collapsed;
             txtResumen.Text = ObtenerTextoResumen();
             btnVolverAsistencias.Visibility = Visibility.Visible;
         }
@@ -242,6 +257,35 @@ namespace SGG.Formularios.Admin
             };
         }
 
+        private bool FiltrarAsistenciaSocioActual(object obj)
+        {
+            if (string.IsNullOrWhiteSpace(_textoBuscarAsistencias)) return true;
+            var s = (ReporteAsistenciaSocioVista)obj;
+            return s.Socio.Contains(_textoBuscarAsistencias, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void txtBuscarAsistencias_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _textoBuscarAsistencias = txtBuscarAsistencias.Text?.Trim() ?? string.Empty;
+            hintBuscarAsistencias.Visibility = string.IsNullOrEmpty(txtBuscarAsistencias.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            AplicarFiltroAsistencias();
+        }
+
+        private void btnLimpiarFiltroAsistencias_Click(object sender, RoutedEventArgs e)
+        {
+            txtBuscarAsistencias.Text = string.Empty;
+            _textoBuscarAsistencias = string.Empty;
+            AplicarFiltroAsistencias();
+        }
+
+        private void AplicarFiltroAsistencias()
+        {
+            _vistaAsistenciasSocios?.Refresh();
+            txtResumen.Text = ObtenerTextoResumen();
+        }
+
         private void MostrarReporteSocios()
         {
             _reporteActual = "socios";
@@ -266,8 +310,9 @@ namespace SGG.Formularios.Admin
             dgReporte.ItemsSource = _sociosActuales;
             txtResumen.Text = ObtenerTextoResumen();
 
-            // Ocultar filtro de socio en socios
+            // Ocultar filtros de socio/pagos y asistencias en socios
             panelFiltroSocio.Visibility = Visibility.Collapsed;
+            panelFiltroAsistencias.Visibility = Visibility.Collapsed;
 
             // Alimentar torta de socios
             MostrarTortasSocios();
@@ -308,12 +353,16 @@ namespace SGG.Formularios.Admin
 
         // ---------- Resumen y columnas en código ----------
 
-        private DataGridTextColumn CrearColumnaTexto(string encabezado, string propiedad, string? formato = null)
+        private DataGridTextColumn CrearColumnaTexto(string encabezado, string propiedad, string? formato = null, bool permitirNulo = false)
         {
+            var binding = new Binding(propiedad) { StringFormat = formato };
+            if (permitirNulo)
+                binding.TargetNullValue = "Sin asistencias";
+
             return new DataGridTextColumn
             {
                 Header = encabezado,
-                Binding = new Binding(propiedad) { StringFormat = formato },
+                Binding = binding,
                 Width = new DataGridLength(1, DataGridLengthUnitType.Star)
             };
         }
@@ -333,6 +382,8 @@ namespace SGG.Formularios.Admin
                 case "asistencias":
                     if (_asistenciaDetalle != null)
                         return $"Historial de {_asistenciaDetalle.Socio}: {_asistenciaDetalle.Total} asistencias";
+                    if (!string.IsNullOrWhiteSpace(_textoBuscarAsistencias))
+                        return $"Resultado: {AsistenciasSociosVisibles.Count} socios · {_asistenciasActuales.Count} asistencias totales";
                     return $"{_asistenciasSocios.Count} socios · {_asistenciasActuales.Count} asistencias totales";
                 case "socios":
                     int activos = _sociosActuales.Count(s => s.Estado == "Activo");
@@ -345,6 +396,9 @@ namespace SGG.Formularios.Admin
 
         private List<ReportePagoVista> PagosVisibles
             => _vistaPagosActual?.Cast<ReportePagoVista>().ToList() ?? _pagosActuales;
+
+        private List<ReporteAsistenciaSocioVista> AsistenciasSociosVisibles
+            => _vistaAsistenciasSocios?.Cast<ReporteAsistenciaSocioVista>().ToList() ?? _asistenciasSocios;
 
         private (string[] Encabezados, List<string[]> Filas) ObtenerDatosExportar()
         {
@@ -368,11 +422,11 @@ namespace SGG.Formularios.Admin
                                 a.FechaHoraIngreso.ToString("dd/MM/yyyy HH:mm")
                             })
                             .ToList();
-                        return (new[] { "Socio", "FechaHora" }, filasHistorial);
+                        return (new[] { "Socio", "Fecha y hora" }, filasHistorial);
                     }
-                    // Modo lista: una fila por socio.
-                    var filasAsistencias = _asistenciasSocios
-                        .Select(s => new[] { s.Socio, s.Total.ToString(), s.UltimaVisita.ToString("dd/MM/yyyy HH:mm") })
+                    // Modo lista: una fila por socio (respetando el filtro actual).
+                    var filasAsistencias = AsistenciasSociosVisibles
+                        .Select(s => new[] { s.Socio, s.Total.ToString(), s.UltimaVisita?.ToString("dd/MM/yyyy HH:mm") ?? "Sin asistencias" })
                         .ToList();
                     return (new[] { "Socio", "Total", "Última visita" }, filasAsistencias);
                 case "socios":
@@ -521,87 +575,7 @@ namespace SGG.Formularios.Admin
             }
         }
 
-        // Genera un FlowDocument y lo envía al diálogo de impresión para que el usuario
-        // pueda elegir "Microsoft Print to PDF" (PDF real sin librerías externas).
-        private void btnExportarPdf_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var dialogo = new PrintDialog();
-                if (dialogo.ShowDialog() != true)
-                    return;
 
-                var documento = ConstruirFlowDocument();
-                dialogo.PrintDocument(((IDocumentPaginatorSource)documento).DocumentPaginator, "Reporte SGG");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("No se pudo generar el PDF: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private FlowDocument ConstruirFlowDocument()
-        {
-            string titulo;
-            if (_reporteActual == "pagos" && !string.IsNullOrWhiteSpace(_textoBuscarPagos))
-                titulo = $"Reporte de Pagos — filtrado por \"{_textoBuscarPagos}\"";
-            else if (_reporteActual == "asistencias" && _asistenciaDetalle != null)
-                titulo = $"Reporte de Asistencias — Historial de {_asistenciaDetalle.Socio}";
-            else
-                titulo = _reporteActual switch
-                {
-                    "pagos" => "Reporte de Pagos",
-                    "asistencias" => "Reporte de Asistencias",
-                    _ => "Reporte de Socios"
-                };
-
-            var documento = new FlowDocument
-            {
-                PagePadding = new Thickness(40),
-                FontFamily = new FontFamily("Segoe UI")
-            };
-
-            documento.Blocks.Add(new Paragraph(new Run(titulo)) { FontSize = 20, FontWeight = FontWeights.Bold });
-            documento.Blocks.Add(new Paragraph(new Run($"Generado el {DateTime.Now:dd/MM/yyyy HH:mm}")) { FontSize = 11, Foreground = Brushes.Gray });
-            documento.Blocks.Add(new Paragraph(new Run(ObtenerTextoResumen())) { FontSize = 12, Foreground = Brushes.Gray, Margin = new Thickness(0, 0, 0, 12) });
-
-            var datos = ObtenerDatosExportar();
-
-            var tabla = new Table { CellSpacing = 0 };
-            for (int i = 0; i < datos.Encabezados.Length; i++)
-                tabla.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
-
-            var grupo = new TableRowGroup();
-
-            var filaEncabezados = new TableRow();
-            foreach (var encabezado in datos.Encabezados)
-            {
-                var celda = new TableCell(new Paragraph(new Run(encabezado)) { FontWeight = FontWeights.Bold });
-                celda.BorderBrush = Brushes.Gray;
-                celda.BorderThickness = new Thickness(0.5);
-                celda.Padding = new Thickness(6);
-                filaEncabezados.Cells.Add(celda);
-            }
-            grupo.Rows.Add(filaEncabezados);
-
-            foreach (var fila in datos.Filas)
-            {
-                var filaTabla = new TableRow();
-                foreach (var valor in fila)
-                {
-                    var celda = new TableCell(new Paragraph(new Run(valor)));
-                    celda.BorderBrush = Brushes.Gray;
-                    celda.BorderThickness = new Thickness(0.5);
-                    celda.Padding = new Thickness(6);
-                    filaTabla.Cells.Add(celda);
-                }
-                grupo.Rows.Add(filaTabla);
-            }
-
-            tabla.RowGroups.Add(grupo);
-            documento.Blocks.Add(tabla);
-            return documento;
-        }
     }
 
     // ---------- Clases auxiliares para mostrar cada reporte ----------
@@ -627,7 +601,7 @@ namespace SGG.Formularios.Admin
         public int SocioId { get; set; }
         public string Socio { get; set; } = string.Empty;
         public int Total { get; set; }
-        public DateTime UltimaVisita { get; set; }
+        public DateTime? UltimaVisita { get; set; }
     }
 
     public class ReporteSocioVista
