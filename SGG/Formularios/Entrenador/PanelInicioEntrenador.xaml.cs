@@ -20,6 +20,13 @@ namespace SGG.Formularios.Entrenador
                 new System.Globalization.CultureInfo("es-AR")
             );
 
+            // Usamos Sesion.NombreVisible (nombre + apellido) para personalizar el saludo.
+            // Si no hay sesión activa, se usa un fallback genérico.
+            var nombre = Sesion.NombreVisible?.Trim();
+            txtBienvenida.Text = string.IsNullOrWhiteSpace(nombre)
+                ? "¡Bienvenido/a, Entrenador/a!"
+                : $"¡Bienvenido/a, {nombre}!";
+
             CargarDatosDePrueba();
         }
 
