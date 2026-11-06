@@ -43,6 +43,20 @@
                         Background="#1A1A1A" Foreground="White" BorderBrush="#333333" Cursor="Hand"
                         Click="btnLimpiarFiltro_Click"/>
             </StackPanel>
+            <!-- Filtros (solo visibles en la pestaña ASISTENCIAS, modo listado por socio) -->
+            <StackPanel x:Name="panelFiltroAsistencias" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,0,12">
+                <Grid Width="320" Height="36">
+                    <TextBox x:Name="txtBuscarAsistencias" Style="{StaticResource TextBoxConPlaceholder}"
+                             VerticalContentAlignment="Center"
+                             TextChanged="txtBuscarAsistencias_TextChanged"/>
+                    <TextBlock x:Name="hintBuscarAsistencias" Text="Buscar por nombre de socio..."
+                               Foreground="#666666" VerticalAlignment="Center" Margin="8,0,0,0"
+                               IsHitTestVisible="False"/>
+                </Grid>
+                <Button Content="Mostrar todos" Margin="10,0,0,0" Padding="12,8" VerticalAlignment="Center"
+                        Background="#1A1A1A" Foreground="White" BorderBrush="#333333" Cursor="Hand"
+                        Click="btnLimpiarFiltroAsistencias_Click"/>
+            </StackPanel>
             <TextBlock x:Name="txtResumen" FontSize="13" Foreground="#888888"/>
             <Button x:Name="btnVolverAsistencias" Content="← Volver al listado" Visibility="Collapsed"
                     Margin="0,10,0,0" Padding="12,8" HorizontalAlignment="Left"
@@ -91,10 +105,8 @@
 
         <!-- Botones de exportar -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="📄  Exportar PDF" Padding="16,10" Margin="0,0,10,0"
-                    Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
-                    Cursor="Hand" Click="btnExportarPdf_Click"/>
-            <Button Content="📊  Exportar Excel" Padding="16,10"
+            
+                    <Button Content="📊  Exportar Excel" Padding="16,10"
                     Background="#1A1A1A" Foreground="White" BorderBrush="#333333"
                     Cursor="Hand" Click="btnExportarExcel_Click"/>
         </StackPanel>
