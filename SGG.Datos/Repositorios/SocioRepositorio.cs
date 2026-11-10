@@ -51,6 +51,36 @@ namespace SGG.Datos.Repositorios
                 .Count();
         }
 
+        // Cantidad de socios por mes de ingreso (FechaAlta) para un año, zero-filled (12 meses).
+        // Solo incluye socios con FechaAlta cargada.
+        public List<(int Mes, int Cantidad)> ContarPorMesIngreso(int anio)
+        {
+            using var contexto = new SggDbContext();
+            var datos = contexto.Socios
+                .Where(s => s.FechaAlta.HasValue && s.FechaAlta.Value.Year == anio)
+                .GroupBy(s => s.FechaAlta!.Value.Month)
+                .Select(g => new { Mes = g.Key, Cantidad = g.Count() })
+                .ToList();
+
+            var resultado = new List<(int Mes, int Cantidad)>();
+            for (int mes = 1; mes <= 12; mes++)
+            {
+                var item = datos.FirstOrDefault(d => d.Mes == mes);
+                resultado.Add((mes, item?.Cantidad ?? 0));
+            }
+            return resultado;
+        }
+
+        // Rango de años de ingreso disponibles (min, max) según FechaAlta. Null si no hay datos.
+        public (int Min, int Max)? ObtenerRangoAniosIngreso()
+        {
+            using var contexto = new SggDbContext();
+            var fechas = contexto.Socios.Where(s => s.FechaAlta.HasValue).Select(s => s.FechaAlta!.Value.Year);
+            if (!fechas.Any())
+                return null;
+            return (fechas.Min(), fechas.Max());
+        }
+
         // Socios ACTIVOS cuya cuota ya venció (vencimiento estrictamente anterior a hoy).
         // El orden es ascendente por fecha: primero los más atrasados.
         public List<Socio> ObtenerVencidos()
