@@ -63,5 +63,15 @@ namespace SGG.Logica.Servicios
             }
             return resultado;
         }
+
+        public (int Min, int Max)? ObtenerRangoAniosIngresoSocios()
+        {
+            return _socioRepositorio.ObtenerRangoAniosIngreso();
+        }
+
+        public List<(int Mes, int Cantidad)> ObtenerSociosPorMesIngreso(int anio)
+        {
+            return _socioRepositorio.ContarPorMesIngreso(anio);
+        }
     }
 }

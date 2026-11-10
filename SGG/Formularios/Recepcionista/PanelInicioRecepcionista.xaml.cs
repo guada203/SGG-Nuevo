@@ -18,8 +18,13 @@ namespace SGG.Formularios.Recepcionista
         private readonly ServicioPagos _servicioPagos = new();
         private readonly ServicioAsistencias _servicioAsistencias = new();
 
+        private bool _cargandoFiltroAnios;
+
         private static readonly string[] MesesCortos =
             { "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic" };
+
+        private static readonly string[] MesesIngresoCortos =
+            { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
 
         private static readonly string[] MesesLargos =
             { "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre" };
@@ -30,6 +35,7 @@ namespace SGG.Formularios.Recepcionista
             CargarEncabezado();
             CargarKpis();
             CargarGraficoIngresos();
+            CargarGraficoSociosPorAnio();
             CargarAlertaVencidos();
             CargarActividadReciente();
         }
@@ -120,6 +126,8 @@ namespace SGG.Formularios.Recepcionista
 
         private void CargarGraficoIngresos()
         {
+            spBarras.Children.Clear();
+
             // Serie de ingresos de los últimos 6 meses calculada a partir de los
             // pagos reales (Mes = primer día de cada mes, en orden ascendente).
             var ingresos = _servicioDashboard.ObtenerIngresosUltimosMeses(6);
@@ -212,6 +220,105 @@ namespace SGG.Formularios.Recepcionista
                 columna.Children.Add(barra);
                 columna.Children.Add(txtMes);
                 spBarras.Children.Add(columna);
+            }
+        }
+
+        private void CargarGraficoSociosPorAnio()
+        {
+            var rango = _servicioDashboard.ObtenerRangoAniosIngresoSocios();
+            if (!rango.HasValue)
+            {
+                cmbAnioIngreso.IsEnabled = false;
+                spBarrasIngresoMes.Children.Clear();
+                spBarrasIngresoMes.Children.Add(new TextBlock
+                {
+                    Text = "Todavía no hay socios con fecha de ingreso registrada.",
+                    FontSize = 12,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)),
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                return;
+            }
+
+            var anios = Enumerable.Range(rango.Value.Min, rango.Value.Max - rango.Value.Min + 1).ToList();
+
+            _cargandoFiltroAnios = true;
+            cmbAnioIngreso.ItemsSource = anios;
+            // Por defecto mostrar el año más reciente con datos (o el año actual si está en rango).
+            int anioActual = DateTime.Now.Year;
+            cmbAnioIngreso.SelectedItem = anios.Contains(anioActual) ? anioActual : rango.Value.Max;
+            _cargandoFiltroAnios = false;
+
+            ActualizarGraficoSociosPorAnio();
+        }
+
+        private void cmbAnioIngreso_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_cargandoFiltroAnios) return;
+            ActualizarGraficoSociosPorAnio();
+        }
+
+        private void ActualizarGraficoSociosPorAnio()
+        {
+            spBarrasIngresoMes.Children.Clear();
+
+            if (cmbAnioIngreso.SelectedItem is not int anio)
+                return;
+
+            var datos = _servicioDashboard.ObtenerSociosPorMesIngreso(anio);
+            int maxCantidad = datos.Count == 0 ? 0 : datos.Max(d => d.Cantidad);
+
+            for (int i = 0; i < datos.Count; i++)
+            {
+                var (mes, cantidad) = datos[i];
+                var columna = new Grid
+                {
+                    MinWidth = 34,
+                    Height = 170,
+                    Margin = new Thickness(2, 0, 2, 0)
+                };
+                columna.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                columna.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+                columna.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                var txtValor = new TextBlock
+                {
+                    Text = cantidad.ToString(),
+                    FontSize = 10,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA)),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 4)
+                };
+                Grid.SetRow(txtValor, 0);
+
+                var barra = new Rectangle
+                {
+                    Width = 18,
+                    Fill = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6)),
+                    RadiusX = 3,
+                    RadiusY = 3,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                barra.Height = maxCantidad > 0
+                    ? Math.Max(cantidad > 0 ? 6.0 : 3.0, (double)cantidad / maxCantidad * 110.0)
+                    : 3.0;
+                Grid.SetRow(barra, 1);
+
+                var txtMes = new TextBlock
+                {
+                    Text = MesesIngresoCortos[mes - 1],
+                    FontSize = 9,
+                    Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 4, 0, 0)
+                };
+                Grid.SetRow(txtMes, 2);
+
+                columna.Children.Add(txtValor);
+                columna.Children.Add(barra);
+                columna.Children.Add(txtMes);
+                spBarrasIngresoMes.Children.Add(columna);
             }
         }
 

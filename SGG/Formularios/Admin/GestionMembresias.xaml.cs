@@ -23,8 +23,16 @@ namespace SGG.Formularios.Admin
         {
             var reales = _servicioMembresias.ObtenerTodas();
 
+            // Parche visual: mostrar solo una membresia por tipo de actividad (Musculacion, Funcional, Combinado).
+            // Los duplicados siguen existiendo en BD; aca se elige un representante por tipo.
+            var visibles = reales
+                .GroupBy(m => m.TipoActividad)
+                .Select(g => g.OrderByDescending(m => m.Vigente).ThenBy(m => m.Id).First())
+                .OrderBy(m => m.TipoActividad)
+                .ToList();
+
             _todasLasMembresias = new ObservableCollection<MembresiaVista>(
-                reales.Select(m => new MembresiaVista
+                visibles.Select(m => new MembresiaVista
                 {
                     Id = m.Id,
                     Actividad = m.TipoActividad.ToString(),
@@ -43,8 +51,9 @@ namespace SGG.Formularios.Admin
 
         private void ActualizarContador()
         {
-            txtCantidadMembresias.Text = $"{_todasLasMembresias.Count} membresías registradas";
+            txtCantidadMembresias.Text = $"{_todasLasMembresias.Count} membresias registradas";
         }
+
 
         private void txtBuscar_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {

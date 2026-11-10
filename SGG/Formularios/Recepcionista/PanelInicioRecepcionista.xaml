@@ -2,13 +2,16 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Background="Transparent">
     <Grid Margin="35">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Encabezado -->
@@ -89,19 +92,23 @@
             </StackPanel>
         </Border>
 
-        <!-- Área inferior: gráfico de ingresos y actividad reciente -->
+        <!-- Área inferior: gráficos y actividad reciente -->
         <Grid Grid.Row="3" Margin="0,20,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Gráfico de barras -->
-            <Border Grid.Column="0" Background="#181818" CornerRadius="8" Padding="18" Margin="0,0,15,0">
+            <!-- Gráfico de barras: ingresos -->
+            <Border Grid.Row="0" Grid.Column="0" Background="#181818" CornerRadius="8" Padding="18" Margin="0,0,15,15">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Text="📈 Ingresos últimos 6 meses" FontSize="14" 
                                FontWeight="SemiBold" Foreground="White" Margin="0,0,0,15"/>
@@ -111,7 +118,7 @@
             </Border>
 
             <!-- Actividad reciente -->
-            <Border Grid.Column="1" Background="#181818" CornerRadius="8" Padding="18">
+            <Border Grid.Row="0" Grid.Column="1" Background="#181818" CornerRadius="8" Padding="18" Margin="0,0,0,15">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -123,7 +130,36 @@
                 </Grid>
             </Border>
 
+            <!-- Gráfico dinámico: socios ingresados por mes del año seleccionado -->
+            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#181818" CornerRadius="8" Padding="18">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="👥 Socios por año de ingreso" FontSize="14" 
+                                   FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Año:" Foreground="#AAAAAA" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="cmbAnioIngreso" Width="100"
+                                      Style="{StaticResource ComboBoxOscuro}"
+                                      SelectionChanged="cmbAnioIngreso_SelectionChanged"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" x:Name="spBarrasIngresoMes" Orientation="Horizontal"
+                                VerticalAlignment="Bottom" HorizontalAlignment="Stretch" MinHeight="170"/>
+                </Grid>
+            </Border>
+
         </Grid>
 
     </Grid>
+    </ScrollViewer>
 </UserControl>

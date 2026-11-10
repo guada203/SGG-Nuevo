@@ -45,11 +45,14 @@
         </Style>
     </UserControl.Resources>
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Background="Transparent">
     <Grid Margin="35">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Encabezado -->
@@ -112,7 +115,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
@@ -137,7 +140,7 @@
                                 Click="btnLimpiarFiltros_Click"/>
                     </StackPanel>
                 </Grid>
-                <DataGrid Grid.Row="1" x:Name="dgPagos">
+                <DataGrid Grid.Row="1" x:Name="dgPagos" MinHeight="260">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Socio" Binding="{Binding Socio}" Width="200"/>
                         <DataGridTextColumn Header="DNI" Binding="{Binding Dni}" Width="110"/>
@@ -160,4 +163,5 @@
         </Border>
 
     </Grid>
+    </ScrollViewer>
 </UserControl>
