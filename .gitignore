@@ -367,3 +367,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Artefactos locales de herramientas/SDD (no versionar)
+.atl/
+openspec/
+sdd/
+output-result.md
